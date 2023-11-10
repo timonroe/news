@@ -1,0 +1,21 @@
+{
+  "name": "news",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.mjs",
+  "type" :"module",
+  "scripts": {
+    "build": "bash ./build.sh",
+    "execute": "node ./index"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "openai": "^4.16.2"
+  },
+  "author": "",
+  "license": "ISC"
+}

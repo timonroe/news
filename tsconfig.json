@@ -107,7 +107,8 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "files": [
-    "index.ts"
+    "./index.ts",
+    "./tests/functional/index.ts"
   ],
   // "exclude": [
   //   "node_modules"

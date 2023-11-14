@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",
@@ -17,8 +17,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@soralinks/logger": "0.0.6",
-    "@soralinks/news-scrapers": "0.0.3",
+    "@soralinks/logger": "0.0.8",
+    "@soralinks/news-scrapers": "0.0.7",
     "openai": "^4.16.2"
   }
 }

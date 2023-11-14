@@ -1,5 +1,5 @@
 import { Logger } from '@soralinks/logger';
-import { CNNScraper } from '@soralinks/news-scrapers';
+import { CNNScraper, FoxScraper } from '@soralinks/news-scrapers';
 import OpenAI from 'openai';
 
 const {
@@ -24,7 +24,7 @@ export class News {
   async summarizeHeadlines(headlines: string[]): Promise<string[]> {
     let prompt = 'Given the following news headlines:\n\n';
     prompt += headlines.join('\n');
-    prompt += `\n\nProduce a summarized list of headlines, no more than 5, that best represents all of the headlines.\n\n`;
+    prompt += `\n\nProduce a summarized list of headlines, no more than 10, that best represents all of the headlines.\n\n`;
     const openai = new OpenAI({
       apiKey: OPENAI_API_KEY,
     });
@@ -53,8 +53,27 @@ export class News {
     const headlines: string[] = [];
     try {
       const cnnScraper: CNNScraper = new CNNScraper();
-      const cnnHeadlines: string[] = await cnnScraper.scrape();
-      headlines.push(...cnnHeadlines);
+      const foxScraper: FoxScraper = new FoxScraper();
+      const scrapers = [
+        cnnScraper,
+        foxScraper,
+      ];
+      const results = await Promise.allSettled(
+        scrapers.map(async (scraper) => {
+          return scraper.scrape();
+        }),
+      );
+      const responses = results.map(result => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+        return undefined;
+      }).filter(Boolean);
+      responses.forEach(response => {
+        if (response) {
+          headlines.push(...response.headlines);
+        }
+      });
     } catch (error: any) {
       this.logger.error(`News.scrapeHeadlines() error: ${error.message}`);
       throw error;

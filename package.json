@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",
@@ -8,6 +8,10 @@
   "type" :"module",
   "license": "MIT",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timonroe/news"
+  },
   "scripts": {
     "build": "./build.sh"
   },
@@ -17,8 +21,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@soralinks/logger": "0.0.8",
-    "@soralinks/news-scrapers": "0.0.7",
+    "@soralinks/logger": "0.0.9",
+    "@soralinks/news-scrapers": "0.0.8",
     "openai": "^4.16.2"
   }
 }

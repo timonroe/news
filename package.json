@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",

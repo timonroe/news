@@ -7,7 +7,7 @@ News utility
 
 ## Setup
 ```javascript
-// This package uses the openai package and needs an OpenAPI apiKey. To set
+// This package uses the openai package and needs an OpenAI apiKey. To set
 // the key, set the environment variable: OPENAI_API_KEY = 'your-openai-api-key'
 
 ```

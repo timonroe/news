@@ -1,6 +1,9 @@
+import {
+  NewsScraperType,
+  NewsScraperResponse,
+} from '@soralinks/news-scrapers';
+
 export declare class News {
   constructor();
-  summarizeHeadlines(headlines: string[]): Promise<string[]>;
-  scrapeHeadlines(): Promise<string[]>;
-  getHeadlines(): Promise<string[]>;
+  getHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]>;
 }

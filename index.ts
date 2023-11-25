@@ -1,6 +1,11 @@
 import { Logger } from '@soralinks/logger';
-import { CNNScraper, FoxScraper } from '@soralinks/news-scrapers';
-import OpenAI from 'openai';
+import {
+  NewsScraperType,
+  NewsScraperResponse,
+  CNNScraper,
+  FoxScraper
+} from '@soralinks/news-scrapers';
+// import OpenAI from 'openai';
 
 const {
   LOGGING_NEWS,
@@ -21,6 +26,7 @@ export class News {
     }
   }
 
+  /*
   async summarizeHeadlines(headlines: string[]): Promise<string[]> {
     let prompt = 'Given the following news headlines:\n\n';
     prompt += headlines.join('\n');
@@ -48,9 +54,10 @@ export class News {
     const summary = content.split('\n');
     return summary;
   }
+  */
   
-  async scrapeHeadlines(): Promise<string[]> {
-    const headlines: string[] = [];
+  async scrapeHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]> {
+    let responses: NewsScraperResponse[] = [];
     try {
       const cnnScraper: CNNScraper = new CNNScraper();
       const foxScraper: FoxScraper = new FoxScraper();
@@ -60,32 +67,31 @@ export class News {
       ];
       const results = await Promise.allSettled(
         scrapers.map(async (scraper) => {
-          return scraper.scrape();
+          return scraper.scrape(type);
         }),
       );
-      const responses = results.map(result => {
+      responses = results.map(result => {
         if (result.status === 'fulfilled') {
           return result.value;
         }
-        return undefined;
-      }).filter(Boolean);
-      responses.forEach(response => {
-        if (response) {
-          headlines.push(...response.headlines);
-        }
+        return {
+          source: '',
+          type: '',
+          headlines: [],
+        };
       });
+      responses = responses.filter(response => response.headlines.length);
     } catch (error: any) {
       this.logger.error(`News.scrapeHeadlines() error: ${error.message}`);
       throw error;
     }
-    return headlines;
+    return responses;
   }
 
-  async getHeadlines(): Promise<string[]> {
-    const headlines: string[] = await this.scrapeHeadlines();
-    const summary: string[] = await this.summarizeHeadlines(headlines);
-    this.logger.verbose(`News.getHeadlines: %s`, JSON.stringify(summary, null, 2));
-    return summary;
+  async getHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]> {
+    const responses: NewsScraperResponse[] = await this.scrapeHeadlines(type);
+    this.logger.verbose(`News.getHeadlines: %s`, JSON.stringify(responses, null, 2));
+    return responses;
   }
 
 }

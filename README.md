@@ -5,21 +5,16 @@ News utility
 
 `npm install @soralinks/news`
 
-## Setup
-```javascript
-// This package uses the openai package and needs an OpenAI apiKey. To set
-// the key, set the environment variable: OPENAI_API_KEY = 'your-openai-api-key'
-
-```
-
 ## Use in your app
 
 ```javascript
-import { News } from '@soralinks/new';
+import { NewsScraperResponseHeadline } from '@soralinks/news-scrapers';
+import { NewsScraperType } from '@soralinks/news-scrapers';
+import { News } from '@soralinks/news';
 
 const news: News = new News();
-const headlines: string[] = await news.getHeadlines();
-console.log('headlines: ', JSON.stringify(headlines, null, 2));
+const headlines: NewsScraperResponseHeadline[] = await news.getHeadlines(NewsScraperType.POLITICS);
+console.log(`headlines: ${JSON.stringify(headlines, null, 2)}`);
 ```
 
 ## Logging

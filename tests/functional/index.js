@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { NewsScraperType, } from '@soralinks/news-scrapers';
+import { NewsScraperType } from '@soralinks/news-scrapers';
 import { News } from '../../index.js';
 (async () => {
     const news = new News();

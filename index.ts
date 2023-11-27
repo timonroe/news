@@ -1,15 +1,15 @@
 import { Logger } from '@soralinks/logger';
 import {
   NewsScraperType,
+  NewsScraperResponseHeadline,
   NewsScraperResponse,
   CNNScraper,
   FoxScraper
 } from '@soralinks/news-scrapers';
-// import OpenAI from 'openai';
+import { ignoreTokens } from './ignore-tokens.js';
 
 const {
   LOGGING_NEWS,
-  OPENAI_API_KEY,
 } = process.env;
 
 export class News {
@@ -21,40 +21,94 @@ export class News {
     } else {
       this.logger = new Logger({ logError: true });
     }
-    if (!OPENAI_API_KEY) {
-      throw new Error('must specify OPENAI_API_KEY as an environment variable');
-    }
   }
 
-  /*
-  async summarizeHeadlines(headlines: string[]): Promise<string[]> {
-    let prompt = 'Given the following news headlines:\n\n';
-    prompt += headlines.join('\n');
-    prompt += `\n\nProduce a summarized list of headlines, no more than 10, that best represents all of the headlines.\n\n`;
-    const openai = new OpenAI({
-      apiKey: OPENAI_API_KEY,
+  scoreTitles(scraperResponses: NewsScraperResponse[], rankedTokens: any[]): NewsScraperResponseHeadline[] {
+    const headlines = scraperResponses.flatMap(scraperResponse => {
+      const { headlines } = scraperResponse;
+      return headlines.map(headline => {
+        // @ts-ignore
+        const { titleTokens } = headline;
+        // Adding a new field (titleRank) to the NewsScraperResponseHeadline type
+        // @ts-ignore
+        headline.titleRank = 0;
+        titleTokens.forEach((token: any) => {
+          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+          if (rankedTok) {
+            const { count } = rankedTok;
+            // @ts-ignore
+            headline.titleRank += count;
+          }
+        });
+        return headline;
+      });
     });
-    const params: OpenAI.Chat.ChatCompletionCreateParams = {
-      messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-3.5-turbo',
-    };
-    let completion: OpenAI.Chat.ChatCompletion;
-    try {
-      completion = await openai.chat.completions.create(params);
-    } catch (error: any) {
-      this.logger.error('News.summarizeHeadlines error: %s', error.message);
-      throw error;
-    }
-    const { choices = [] } = completion;
-    if (!choices.length) return [];
-    const { message } = choices[0];
-    if (!message) return [];
-    const { content } = message;
-    if (!content) return [];
-    const summary = content.split('\n');
-    return summary;
+    headlines.sort((firstEl, secondEl) => {
+      // @ts-ignore
+      if (firstEl.titleRank < secondEl.titleRank) {
+        return 1;
+      }
+      // @ts-ignore
+      if (firstEl.titleRank > secondEl.titleRank) {
+        return -1;
+      }
+      return 0;
+    });
+    return headlines;
   }
-  */
+
+  rankTokens(tokenizedTitles: string[][][]): any[] {
+    let rankedTokens: any[] = [];
+    tokenizedTitles.forEach(sourceTokenizedTitles => {
+      sourceTokenizedTitles.forEach(titleTokens => {   
+        titleTokens.forEach(token => {
+          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+          if (rankedTok) {
+            rankedTok.count += 1;
+          } else {
+            rankedTokens.push({
+              token,
+              count: 1,
+            })
+          }
+        });
+      });
+    });
+    rankedTokens.sort((firstEl, secondEl) => {
+      if (firstEl.count < secondEl.count) {
+        return 1;
+      }
+      if (firstEl.count > secondEl.count) {
+        return -1;
+      }
+      return 0;
+    });
+    rankedTokens = rankedTokens.map(rankedToken => {
+      const { count } = rankedToken;
+      if (count > 1) {
+        return rankedToken;
+      }
+      return undefined;
+    }).filter(rankedToken => rankedToken !== undefined);
+    return rankedTokens;
+  }
+
+  tokenizeTitles(scraperResponses: NewsScraperResponse[]): string[][][] {
+    return scraperResponses.map(scraperResponse => {
+      const { headlines } = scraperResponse;
+      return headlines.map(headline => {
+        const { title } = headline;
+        // Adding a new field (titleTokens) to the NewsScraperResponseHeadline type
+        // @ts-ignore
+        headline.titleTokens = title.split(' ').map(word => {
+          const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase();
+          return !ignoreTokens.includes(token) ? token : undefined;
+        }).filter(token => token !== undefined);
+        // @ts-ignore
+        return headline.titleTokens;
+      });
+    });
+  }
   
   async scrapeHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]> {
     let responses: NewsScraperResponse[] = [];
@@ -88,10 +142,27 @@ export class News {
     return responses;
   }
 
-  async getHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]> {
-    const responses: NewsScraperResponse[] = await this.scrapeHeadlines(type);
-    this.logger.verbose(`News.getHeadlines: %s`, JSON.stringify(responses, null, 2));
-    return responses;
+  async getHeadlines(type: NewsScraperType): Promise<NewsScraperResponseHeadline[]> {
+    const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type);
+
+    const tokenizedTitles = this.tokenizeTitles(scraperResponses);
+    // console.log(`tokenizedTitles: ${JSON.stringify(tokenizedTitles, null, 2)}`);
+
+    const rankedTokens = this.rankTokens(tokenizedTitles);
+    // console.log(`rankedTokens: ${JSON.stringify(rankedTokens, null, 2)}`);
+    this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
+
+    const headlines = this.scoreTitles(scraperResponses, rankedTokens);
+    // console.log(`headlines: ${JSON.stringify(headlines, null,2 )}`);
+
+    const topHeadlines: NewsScraperResponseHeadline[] = []
+    for(let x = 0; x < 20 && headlines.length > x; x++) {
+      topHeadlines.push(headlines[x]);
+    }
+    // console.log(`topHeadlines: ${JSON.stringify(topHeadlines, null,2 )}`);
+
+    this.logger.verbose(`News.getHeadlines: headlines: %s`, JSON.stringify(topHeadlines, null, 2));
+    return topHeadlines;
   }
 
 }

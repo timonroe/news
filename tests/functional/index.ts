@@ -7,6 +7,6 @@ import { News } from '../../index.js';
 
 (async () => {
   const news: News = new News();
-  const headlines: NewsScraperResponseHeadline[] = await news.getHeadlines(NewsScraperType.POLITICS);
+  const headlines: NewsScraperResponseHeadline[] = await news.getHeadlines(NewsScraperType.POLITICS, 10);
   console.log(`headlines: ${JSON.stringify(headlines, null, 2)}`);
 })();

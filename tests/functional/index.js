@@ -3,6 +3,6 @@ import { NewsScraperType } from '@soralinks/news-scrapers';
 import { News } from '../../index.js';
 (async () => {
     const news = new News();
-    const headlines = await news.getHeadlines(NewsScraperType.POLITICS);
+    const headlines = await news.getHeadlines(NewsScraperType.POLITICS, 10);
     console.log(`headlines: ${JSON.stringify(headlines, null, 2)}`);
 })();

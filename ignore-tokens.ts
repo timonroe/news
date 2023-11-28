@@ -6,6 +6,7 @@ export const ignoreTokens: string[] = [
   'as',
   'be',
   'for',
+  'from',
   'he',
   'her',
   'his',

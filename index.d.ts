@@ -3,5 +3,5 @@ import { NewsScraperType } from '@soralinks/news-scrapers';
 
 export declare class News {
   constructor();
-  getHeadlines(type: NewsScraperType): Promise<NewsScraperResponseHeadline[]>;
+  getHeadlines(type: NewsScraperType, count: number): Promise<NewsScraperResponseHeadline[]>;
 }

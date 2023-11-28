@@ -6,6 +6,7 @@ export const ignoreTokens = [
     'as',
     'be',
     'for',
+    'from',
     'he',
     'her',
     'his',

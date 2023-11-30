@@ -1,11 +1,13 @@
 import { Logger } from '@soralinks/logger';
 import {
   NewsScraperType,
+  NewsScraperSource,
   NewsScraperResponseHeadline,
   NewsScraperResponse,
   APScraper,
   CNNScraper,
-  FoxScraper
+  FoxScraper,
+  WashExamScraper,
 } from '@soralinks/news-scrapers';
 import { ignoreTokens } from './ignore-tokens.js';
 
@@ -105,30 +107,32 @@ export class News {
       });
     });
   }
+
+  createScrapers(sources: NewsScraperSource[]): any[] {
+    return sources.map(source => {
+      if (source === NewsScraperSource.AP) return new APScraper();
+      else if (source === NewsScraperSource.CNN) return new CNNScraper();
+      else if (source === NewsScraperSource.FOX) return new FoxScraper();
+      else if (source === NewsScraperSource.WASH_EXAM) return new WashExamScraper();
+      else throw new Error(`news scraper source: ${source} is invalid`);
+    });
+  }
   
-  async scrapeHeadlines(type: NewsScraperType): Promise<NewsScraperResponse[]> {
+  async scrapeHeadlines(type: NewsScraperType, sources: NewsScraperSource[]): Promise<NewsScraperResponse[]> {
     let responses: NewsScraperResponse[] = [];
     try {
-      const apScraper: APScraper = new APScraper();
-      const cnnScraper: CNNScraper = new CNNScraper();
-      const foxScraper: FoxScraper = new FoxScraper();
-      const scrapers = [
-        apScraper,
-        cnnScraper,
-        foxScraper,
-      ];
+      const scrapers = this.createScrapers(sources);
       const results = await Promise.allSettled(
         scrapers.map(async (scraper) => {
           return scraper.scrape(type);
         }),
       );
+      // @ts-ignore
       responses = results.map(result => {
         if (result.status === 'fulfilled') {
           return result.value;
         }
         return {
-          source: '',
-          type: '',
           headlines: [],
         };
       });
@@ -140,11 +144,29 @@ export class News {
     return responses;
   }
 
-  async getHeadlines(type: NewsScraperType, count: number = DEFAULT_NUM_HEADLINES): Promise<NewsScraperResponseHeadline[]> {
-    if (typeof count !== 'number' || count < 1) {
-      throw new Error('count must be a number greater than 0');
+  async getHeadlines(params: {
+    type: NewsScraperType;
+    sources: NewsScraperSource[];
+    topHeadlines: {
+      count: number;
+    };
+  }): Promise<any> {
+    const { type, sources, topHeadlines } = params;
+    let count;
+    if (topHeadlines) {
+      count = topHeadlines.count;
+      if (count === undefined || (typeof count !== 'number' || count < 1)) {
+        throw new Error('count must be a number greater than 0');
+      }
     }
-    const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type);
+
+    const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type, sources);
+    if (!topHeadlines) {
+      return {
+        responses: scraperResponses,
+        topHeadlines: undefined,
+      };
+    }
 
     const tokenizedTitles = this.tokenizeTitles(scraperResponses);
     this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
@@ -154,13 +176,17 @@ export class News {
 
     const headlines = this.scoreTitles(scraperResponses, rankedTokens);
 
-    const topHeadlines: NewsScraperResponseHeadline[] = []
+    const topRankedHeadlines: NewsScraperResponseHeadline[] = []
+    // @ts-ignore
     for(let x = 0; x < count && headlines.length > x; x++) {
-      topHeadlines.push(headlines[x]);
+      topRankedHeadlines.push(headlines[x]);
     }
-    this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topHeadlines, null, 2));
+    this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
 
-    return topHeadlines;
+    return {
+      responses: scraperResponses,
+      topHeadlines: topRankedHeadlines,
+    }
   }
 
 }

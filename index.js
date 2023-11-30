@@ -1,5 +1,5 @@
 import { Logger } from '@soralinks/logger';
-import { APScraper, CNNScraper, FoxScraper } from '@soralinks/news-scrapers';
+import { NewsScraperSource, APScraper, CNNScraper, FoxScraper, WashExamScraper, } from '@soralinks/news-scrapers';
 import { ignoreTokens } from './ignore-tokens.js';
 const { LOGGING_NEWS, } = process.env;
 const DEFAULT_NUM_HEADLINES = 20;
@@ -91,27 +91,33 @@ export class News {
             });
         });
     }
-    async scrapeHeadlines(type) {
+    createScrapers(sources) {
+        return sources.map(source => {
+            if (source === NewsScraperSource.AP)
+                return new APScraper();
+            else if (source === NewsScraperSource.CNN)
+                return new CNNScraper();
+            else if (source === NewsScraperSource.FOX)
+                return new FoxScraper();
+            else if (source === NewsScraperSource.WASH_EXAM)
+                return new WashExamScraper();
+            else
+                throw new Error(`news scraper source: ${source} is invalid`);
+        });
+    }
+    async scrapeHeadlines(type, sources) {
         let responses = [];
         try {
-            const apScraper = new APScraper();
-            const cnnScraper = new CNNScraper();
-            const foxScraper = new FoxScraper();
-            const scrapers = [
-                apScraper,
-                cnnScraper,
-                foxScraper,
-            ];
+            const scrapers = this.createScrapers(sources);
             const results = await Promise.allSettled(scrapers.map(async (scraper) => {
                 return scraper.scrape(type);
             }));
+            // @ts-ignore
             responses = results.map(result => {
                 if (result.status === 'fulfilled') {
                     return result.value;
                 }
                 return {
-                    source: '',
-                    type: '',
                     headlines: [],
                 };
             });
@@ -123,21 +129,36 @@ export class News {
         }
         return responses;
     }
-    async getHeadlines(type, count = DEFAULT_NUM_HEADLINES) {
-        if (typeof count !== 'number' || count < 1) {
-            throw new Error('count must be a number greater than 0');
+    async getHeadlines(params) {
+        const { type, sources, topHeadlines } = params;
+        let count;
+        if (topHeadlines) {
+            count = topHeadlines.count;
+            if (count === undefined || (typeof count !== 'number' || count < 1)) {
+                throw new Error('count must be a number greater than 0');
+            }
         }
-        const scraperResponses = await this.scrapeHeadlines(type);
+        const scraperResponses = await this.scrapeHeadlines(type, sources);
+        if (!topHeadlines) {
+            return {
+                responses: scraperResponses,
+                topHeadlines: undefined,
+            };
+        }
         const tokenizedTitles = this.tokenizeTitles(scraperResponses);
         this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
         const rankedTokens = this.rankTokens(tokenizedTitles);
         this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
         const headlines = this.scoreTitles(scraperResponses, rankedTokens);
-        const topHeadlines = [];
+        const topRankedHeadlines = [];
+        // @ts-ignore
         for (let x = 0; x < count && headlines.length > x; x++) {
-            topHeadlines.push(headlines[x]);
+            topRankedHeadlines.push(headlines[x]);
         }
-        this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topHeadlines, null, 2));
-        return topHeadlines;
+        this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
+        return {
+            responses: scraperResponses,
+            topHeadlines: topRankedHeadlines,
+        };
     }
 }

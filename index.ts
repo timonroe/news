@@ -28,9 +28,9 @@ export class News {
     }
   }
 
-  scoreTitles(scraperResponses: NewsScraperResponse[], rankedTokens: any[]): NewsScraperResponseHeadline[] {
+  scoreTitles(scraperResponses: NewsScraperResponse[], rankedTokens: any[]): any[] {
     const headlines = scraperResponses.flatMap(scraperResponse => {
-      const { headlines } = scraperResponse;
+      const { source, headlines } = scraperResponse;
       return headlines.map(headline => {
         // @ts-ignore
         const { titleTokens } = headline;
@@ -45,7 +45,10 @@ export class News {
             headline.titleRank += count;
           }
         });
-        return headline;
+        return {
+          source,
+          ...headline,
+        }
       });
     });
     headlines.sort((firstEl, secondEl) => {
@@ -176,7 +179,7 @@ export class News {
 
     const headlines = this.scoreTitles(scraperResponses, rankedTokens);
 
-    const topRankedHeadlines: NewsScraperResponseHeadline[] = []
+    const topRankedHeadlines: any[] = []
     // @ts-ignore
     for(let x = 0; x < count && headlines.length > x; x++) {
       topRankedHeadlines.push(headlines[x]);

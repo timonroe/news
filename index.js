@@ -15,7 +15,7 @@ export class News {
     }
     scoreTitles(scraperResponses, rankedTokens) {
         const headlines = scraperResponses.flatMap(scraperResponse => {
-            const { headlines } = scraperResponse;
+            const { source, headlines } = scraperResponse;
             return headlines.map(headline => {
                 // @ts-ignore
                 const { titleTokens } = headline;
@@ -30,7 +30,10 @@ export class News {
                         headline.titleRank += count;
                     }
                 });
-                return headline;
+                return {
+                    source,
+                    ...headline,
+                };
             });
         });
         headlines.sort((firstEl, secondEl) => {

@@ -2,7 +2,7 @@ import { Logger } from '@soralinks/logger';
 import {
   NewsScraperType,
   NewsScraperSource,
-  NewsScraperResponseHeadline,
+  NewsScraperHeadline,
   NewsScraperResponse,
   APScraper,
   CNNScraper,
@@ -16,6 +16,17 @@ const {
 } = process.env;
 
 const DEFAULT_NUM_HEADLINES = 20;
+
+export type NewsHeadline = {
+  source: string;
+  title: string;
+  url: string;
+};
+
+export type NewsResponse = {
+  scraperResponses: NewsScraperResponse[];
+  topHeadlines: NewsHeadline[] | undefined;
+};
 
 export class News {
   logger: Logger;
@@ -34,7 +45,7 @@ export class News {
       return headlines.map(headline => {
         // @ts-ignore
         const { titleTokens } = headline;
-        // Adding a new field (titleRank) to the NewsScraperResponseHeadline type
+        // Adding a new field (titleRank) to the NewsScraperHeadline type
         // @ts-ignore
         headline.titleRank = 0;
         titleTokens.forEach((token: any) => {
@@ -99,7 +110,7 @@ export class News {
       const { headlines } = scraperResponse;
       return headlines.map(headline => {
         const { title } = headline;
-        // Adding a new field (titleTokens) to the NewsScraperResponseHeadline type
+        // Adding a new field (titleTokens) to the NewsScraperHeadline type
         // @ts-ignore
         headline.titleTokens = title.split(' ').map(word => {
           const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase();
@@ -153,7 +164,7 @@ export class News {
     topHeadlines: {
       count: number;
     };
-  }): Promise<any> {
+  }): Promise<NewsResponse> {
     const { type, sources, topHeadlines } = params;
     let count;
     if (topHeadlines) {
@@ -166,20 +177,22 @@ export class News {
     const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type, sources);
     if (!topHeadlines) {
       return {
-        responses: scraperResponses,
+        scraperResponses: scraperResponses,
         topHeadlines: undefined,
       };
     }
 
-    const tokenizedTitles = this.tokenizeTitles(scraperResponses);
+    const tokenizedTitles: string[][][] = this.tokenizeTitles(scraperResponses);
     this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
 
-    const rankedTokens = this.rankTokens(tokenizedTitles);
+    const rankedTokens: any[] = this.rankTokens(tokenizedTitles);
     this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
 
-    const headlines = this.scoreTitles(scraperResponses, rankedTokens);
+    const scoredTitles: any[] = this.scoreTitles(scraperResponses, rankedTokens);
+    this.logger.verbose(`News.getHeadlines: scoredTitles: %s`, JSON.stringify(scoredTitles, null, 2));
 
-    const topRankedHeadlines: any[] = []
+    const headlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });
+    const topRankedHeadlines: NewsHeadline[] = []
     // @ts-ignore
     for(let x = 0; x < count && headlines.length > x; x++) {
       topRankedHeadlines.push(headlines[x]);
@@ -187,7 +200,7 @@ export class News {
     this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
 
     return {
-      responses: scraperResponses,
+      scraperResponses: scraperResponses,
       topHeadlines: topRankedHeadlines,
     }
   }

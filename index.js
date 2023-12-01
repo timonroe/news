@@ -19,7 +19,7 @@ export class News {
             return headlines.map(headline => {
                 // @ts-ignore
                 const { titleTokens } = headline;
-                // Adding a new field (titleRank) to the NewsScraperResponseHeadline type
+                // Adding a new field (titleRank) to the NewsScraperHeadline type
                 // @ts-ignore
                 headline.titleRank = 0;
                 titleTokens.forEach((token) => {
@@ -83,7 +83,7 @@ export class News {
             const { headlines } = scraperResponse;
             return headlines.map(headline => {
                 const { title } = headline;
-                // Adding a new field (titleTokens) to the NewsScraperResponseHeadline type
+                // Adding a new field (titleTokens) to the NewsScraperHeadline type
                 // @ts-ignore
                 headline.titleTokens = title.split(' ').map(word => {
                     const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase();
@@ -144,7 +144,7 @@ export class News {
         const scraperResponses = await this.scrapeHeadlines(type, sources);
         if (!topHeadlines) {
             return {
-                responses: scraperResponses,
+                scraperResponses: scraperResponses,
                 topHeadlines: undefined,
             };
         }
@@ -152,7 +152,9 @@ export class News {
         this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
         const rankedTokens = this.rankTokens(tokenizedTitles);
         this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
-        const headlines = this.scoreTitles(scraperResponses, rankedTokens);
+        const scoredTitles = this.scoreTitles(scraperResponses, rankedTokens);
+        this.logger.verbose(`News.getHeadlines: scoredTitles: %s`, JSON.stringify(scoredTitles, null, 2));
+        const headlines = scoredTitles.map(({ source, title, url }) => { return { source, title, url }; });
         const topRankedHeadlines = [];
         // @ts-ignore
         for (let x = 0; x < count && headlines.length > x; x++) {
@@ -160,7 +162,7 @@ export class News {
         }
         this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
         return {
-            responses: scraperResponses,
+            scraperResponses: scraperResponses,
             topHeadlines: topRankedHeadlines,
         };
     }

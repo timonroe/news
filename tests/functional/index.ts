@@ -3,11 +3,11 @@ import {
   NewsScraperSource,
   NewsScraperType,
 } from '@soralinks/news-scrapers';
-import { News } from '../../index.js';
+import { News, NewsResponse } from '../../index.js';
 
 (async () => {
   const news: News = new News();
-  const results = await news.getHeadlines({
+  const results: NewsResponse = await news.getHeadlines({
     type: NewsScraperType.POLITICS,
     sources: [NewsScraperSource.AP, NewsScraperSource.CNN, NewsScraperSource.FOX, NewsScraperSource.WASH_EXAM],
     topHeadlines: {

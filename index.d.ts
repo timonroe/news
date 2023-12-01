@@ -1,4 +1,19 @@
-import { NewsScraperSource, NewsScraperType } from '@soralinks/news-scrapers';
+import {
+  NewsScraperSource,
+  NewsScraperType,
+  NewsScraperResponse
+} from '@soralinks/news-scrapers';
+
+export declare type NewsHeadline = {
+  source: string;
+  title: string;
+  url: string;
+};
+
+export declare type NewsResponse = {
+  scraperResponses: NewsScraperResponse[];
+  topHeadlines: NewsHeadline[] | undefined;
+};
 
 export declare class News {
   constructor();
@@ -8,5 +23,5 @@ export declare class News {
     topHeadlines: {
       count: number;
     };
-  }): Promise<any>;
+  }): Promise<NewsResponse>;
 }

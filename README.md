@@ -9,20 +9,20 @@ News utility
 
 ```javascript
 import {
-  NewsScraperSource,
   NewsScraperType,
+  NewsScraperSource,
 } from '@soralinks/news-scrapers';
-import { News } from '@soralinks/news';
+import { News, NewsResponse } from '@soralinks/news';
 
 const news: News = new News();
-const results = await news.getHeadlines({
+const newsResponse: NewsResponse = await news.getHeadlines({
   type: NewsScraperType.POLITICS,
   sources: [NewsScraperSource.AP, NewsScraperSource.CNN, NewsScraperSource.FOX, NewsScraperSource.WASH_EXAM],
   topHeadlines: {
     count: 20,
   },
 });
-console.log(`results: ${JSON.stringify(results, null, 2)}`);
+console.log(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
 ```
 
 ## Logging

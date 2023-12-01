@@ -1,18 +1,18 @@
 import 'dotenv/config';
-import { 
-  NewsScraperSource,
+import {
   NewsScraperType,
+  NewsScraperSource,
 } from '@soralinks/news-scrapers';
 import { News, NewsResponse } from '../../index.js';
 
 (async () => {
   const news: News = new News();
-  const results: NewsResponse = await news.getHeadlines({
+  const newsResponse: NewsResponse = await news.getHeadlines({
     type: NewsScraperType.POLITICS,
     sources: [NewsScraperSource.AP, NewsScraperSource.CNN, NewsScraperSource.FOX, NewsScraperSource.WASH_EXAM],
     topHeadlines: {
       count: 20,
     },
   });
-  console.log(`results: ${JSON.stringify(results, null, 2)}`);
+  console.log(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
 })();

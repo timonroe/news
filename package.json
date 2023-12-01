@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",
@@ -22,6 +22,6 @@
   },
   "dependencies": {
     "@soralinks/logger": "0.0.9",
-    "@soralinks/news-scrapers": "0.0.15"
+    "@soralinks/news-scrapers": "0.0.16"
   }
 }

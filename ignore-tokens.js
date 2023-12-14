@@ -1,4 +1,5 @@
 export const ignoreTokens = [
+    '',
     'a',
     'an',
     'and',

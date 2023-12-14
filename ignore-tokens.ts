@@ -1,4 +1,5 @@
 export const ignoreTokens: string[] = [
+  '',
   'a',
   'an',
   'and',

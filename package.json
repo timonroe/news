@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",
@@ -16,12 +16,13 @@
     "build": "./build.sh"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.124",
     "@types/node": "^20.9.0",
     "dotenv": "^16.3.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
     "@soralinks/logger": "0.0.9",
-    "@soralinks/news-scrapers": "0.0.16"
+    "@soralinks/news-scrapers": "0.0.20"
   }
 }

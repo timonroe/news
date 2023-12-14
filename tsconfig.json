@@ -109,6 +109,7 @@
   "files": [
     "./ignore-tokens.ts",
     "./index.ts",
+    "./lambdas/get-headlines/index.ts",
     "./tests/functional/index.ts"
   ],
   // "exclude": [

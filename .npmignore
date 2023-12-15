@@ -1,4 +1,4 @@
 .env
 .vscode
 build.sh
-./dist
+dist/**/*

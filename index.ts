@@ -2,12 +2,9 @@ import { Logger } from '@soralinks/logger';
 import {
   NewsScraperType,
   NewsScraperSource,
-  NewsScraperHeadline,
   NewsScraperResponse,
-  APScraper,
-  CNNScraper,
-  FoxScraper,
-  WashExamScraper,
+  NewsScraper,
+  NewsScraperFactor,
 } from '@soralinks/news-scrapers';
 import { ignoreTokens } from './ignore-tokens.js';
 
@@ -121,23 +118,17 @@ export class News {
       });
     });
   }
-
-  createScrapers(sources: NewsScraperSource[]): any[] {
-    return sources.map(source => {
-      if (source === NewsScraperSource.AP) return new APScraper();
-      else if (source === NewsScraperSource.CNN) return new CNNScraper();
-      else if (source === NewsScraperSource.FOX) return new FoxScraper();
-      else if (source === NewsScraperSource.WASH_EXAM) return new WashExamScraper();
-      else throw new Error(`news scraper source: ${source} is invalid`);
-    });
-  }
   
-  async scrapeHeadlines(type: NewsScraperType, sources: NewsScraperSource[]): Promise<NewsScraperResponse[]> {
+  async scrapeHeadlines(
+    type: NewsScraperType,
+    sources: NewsScraperSource[]
+  ): Promise<NewsScraperResponse[]> {
     let responses: NewsScraperResponse[] = [];
     try {
-      const scrapers = this.createScrapers(sources);
+      const factory = new NewsScraperFactor();
+      const scrapers = await factory.createScrapers(sources);
       const results = await Promise.allSettled(
-        scrapers.map(async (scraper) => {
+        scrapers.map(async (scraper: NewsScraper) => {
           return scraper.scrape(type);
         }),
       );
@@ -146,11 +137,8 @@ export class News {
         if (result.status === 'fulfilled') {
           return result.value;
         }
-        return {
-          headlines: [],
-        };
-      });
-      responses = responses.filter(response => response.headlines.length);
+        return undefined;
+      }).filter(Boolean);
     } catch (error: any) {
       this.logger.error(`News.scrapeHeadlines() error: ${error.message}`);
       throw error;

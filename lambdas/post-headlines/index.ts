@@ -58,7 +58,7 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
     const news: News = new News();
     const newsResponse: NewsResponse = await news.getHeadlines({
       type: NewsScraperType.POLITICS,
-      sources: [NewsScraperSource.AP, NewsScraperSource.CNN, NewsScraperSource.FOX, NewsScraperSource.WASH_EXAM],
+      sources: [...Object.values(NewsScraperSource).map(source => source)],
       topHeadlines: {
         count: 20,
       },

@@ -1,5 +1,5 @@
 import { Logger } from '@soralinks/logger';
-import { NewsScraperSource, APScraper, CNNScraper, FoxScraper, WashExamScraper, } from '@soralinks/news-scrapers';
+import { NewsScraperFactor, } from '@soralinks/news-scrapers';
 import { ignoreTokens } from './ignore-tokens.js';
 const { LOGGING_NEWS, } = process.env;
 const DEFAULT_NUM_HEADLINES = 20;
@@ -94,24 +94,11 @@ export class News {
             });
         });
     }
-    createScrapers(sources) {
-        return sources.map(source => {
-            if (source === NewsScraperSource.AP)
-                return new APScraper();
-            else if (source === NewsScraperSource.CNN)
-                return new CNNScraper();
-            else if (source === NewsScraperSource.FOX)
-                return new FoxScraper();
-            else if (source === NewsScraperSource.WASH_EXAM)
-                return new WashExamScraper();
-            else
-                throw new Error(`news scraper source: ${source} is invalid`);
-        });
-    }
     async scrapeHeadlines(type, sources) {
         let responses = [];
         try {
-            const scrapers = this.createScrapers(sources);
+            const factory = new NewsScraperFactor();
+            const scrapers = await factory.createScrapers(sources);
             const results = await Promise.allSettled(scrapers.map(async (scraper) => {
                 return scraper.scrape(type);
             }));
@@ -120,11 +107,8 @@ export class News {
                 if (result.status === 'fulfilled') {
                     return result.value;
                 }
-                return {
-                    headlines: [],
-                };
-            });
-            responses = responses.filter(response => response.headlines.length);
+                return undefined;
+            }).filter(Boolean);
         }
         catch (error) {
             this.logger.error(`News.scrapeHeadlines() error: ${error.message}`);

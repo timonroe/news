@@ -2,7 +2,8 @@ import { Logger } from '@soralinks/logger';
 import { NewsScraperFactor, } from '@soralinks/news-scrapers';
 import { ignoreTokens } from './ignore-tokens.js';
 const { LOGGING_NEWS, } = process.env;
-const DEFAULT_NUM_HEADLINES = 20;
+export const DEFAULT_NUM_TOP_HEADLINES = 20;
+export const DEFAULT_NUM_TOP_TOKENS = 20;
 export class News {
     logger;
     constructor() {
@@ -117,37 +118,45 @@ export class News {
         return responses;
     }
     async getHeadlines(params) {
-        const { type, sources, topHeadlines } = params;
-        let count;
-        if (topHeadlines) {
-            count = topHeadlines.count;
-            if (count === undefined || (typeof count !== 'number' || count < 1)) {
-                throw new Error('count must be a number greater than 0');
+        const { type, sources, options } = params;
+        let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
+        let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
+        if (options) {
+            if (options.topHeadlinesCount !== undefined && options.topHeadlinesCount >= 0) {
+                topHeadlinesCount = options.topHeadlinesCount;
+            }
+            if (options.topTokensCount !== undefined && options.topTokensCount >= 0) {
+                topTokensCount = options.topTokensCount;
             }
         }
         const scraperResponses = await this.scrapeHeadlines(type, sources);
-        if (!topHeadlines) {
+        if (!options || (!options.topHeadlinesCount && !options.topTokensCount)) {
             return {
                 scraperResponses: scraperResponses,
                 topHeadlines: undefined,
+                topTokens: undefined,
             };
         }
         const tokenizedTitles = this.tokenizeTitles(scraperResponses);
         this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
         const rankedTokens = this.rankTokens(tokenizedTitles);
-        this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
+        const topRankedTokens = [];
+        for (let x = 0; x < topTokensCount && rankedTokens.length > x; x++) {
+            topRankedTokens.push(rankedTokens[x]);
+        }
+        this.logger.verbose(`News.getHeadlines: top${topTokensCount}Tokens: %s`, JSON.stringify(topRankedTokens, null, 2));
         const scoredTitles = this.scoreTitles(scraperResponses, rankedTokens);
         this.logger.verbose(`News.getHeadlines: scoredTitles: %s`, JSON.stringify(scoredTitles, null, 2));
-        const headlines = scoredTitles.map(({ source, title, url }) => { return { source, title, url }; });
+        const rankedHeadlines = scoredTitles.map(({ source, title, url }) => { return { source, title, url }; });
         const topRankedHeadlines = [];
-        // @ts-ignore
-        for (let x = 0; x < count && headlines.length > x; x++) {
-            topRankedHeadlines.push(headlines[x]);
+        for (let x = 0; x < topHeadlinesCount && rankedHeadlines.length > x; x++) {
+            topRankedHeadlines.push(rankedHeadlines[x]);
         }
-        this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
+        this.logger.verbose(`News.getHeadlines: top${topHeadlinesCount}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
         return {
             scraperResponses: scraperResponses,
-            topHeadlines: topRankedHeadlines,
+            topHeadlines: topRankedHeadlines.length ? topRankedHeadlines : undefined,
+            topTokens: topRankedTokens.length ? topRankedTokens : undefined,
         };
     }
 }

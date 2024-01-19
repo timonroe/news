@@ -19,8 +19,9 @@ import { News, NewsResponse } from '@soralinks/news';
   const newsResponse: NewsResponse = await news.getHeadlines({
     type: NewsScraperType.POLITICS,
     sources: [...Object.values(NewsScraperSource).map(source => source)],
-    topHeadlines: {
-      count: 20,
+    options: {
+      topHeadlinesCount: 20,
+      topTokensCount: 20,
     },
   });
   console.log(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);

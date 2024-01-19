@@ -1,8 +1,8 @@
 import { Logger } from '@soralinks/logger';
 import { S3Client, PutObjectCommand, } from "@aws-sdk/client-s3";
 import { NewsScraperType, NewsScraperSource, } from '@soralinks/news-scrapers';
-import { News } from '../../index.js';
-const { NEWS_HEADLINES_DATA_S3_BUCKET, } = process.env;
+import { DEFAULT_NUM_TOP_HEADLINES, DEFAULT_NUM_TOP_TOKENS, News } from '../../index.js';
+const { NEWS_HEADLINES_DATA_S3_BUCKET, NEWS_DEFAULT_NUM_TOP_HEADLINES, NEWS_DEFAULT_NUM_TOP_TOKENS, } = process.env;
 function initResponse() {
     return {
         isBase64Encoded: false,
@@ -37,12 +37,24 @@ export const handler = async (event, context) => {
     logger.verbose('context:', ctx);
     const response = initResponse();
     try {
+        let count;
+        let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
+        if (NEWS_DEFAULT_NUM_TOP_HEADLINES) {
+            count = parseInt(NEWS_DEFAULT_NUM_TOP_HEADLINES, 10);
+            topHeadlinesCount = count >= 0 ? count : topHeadlinesCount;
+        }
+        let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
+        if (NEWS_DEFAULT_NUM_TOP_TOKENS) {
+            count = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
+            topTokensCount = count >= 0 ? count : topTokensCount;
+        }
         const news = new News();
         const newsResponse = await news.getHeadlines({
             type: NewsScraperType.POLITICS,
             sources: [...Object.values(NewsScraperSource).map(source => source)],
-            topHeadlines: {
-                count: 20,
+            options: {
+                topHeadlinesCount,
+                topTokensCount,
             },
         });
         logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);

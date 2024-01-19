@@ -12,7 +12,8 @@ const {
   LOGGING_NEWS,
 } = process.env;
 
-const DEFAULT_NUM_HEADLINES = 20;
+export const DEFAULT_NUM_TOP_HEADLINES = 20;
+export const DEFAULT_NUM_TOP_TOKENS = 20;
 
 export type NewsHeadline = {
   source: string;
@@ -20,9 +21,15 @@ export type NewsHeadline = {
   url: string;
 };
 
+export type RankedToken = {
+  token: string;
+  count: number;
+};
+
 export type NewsResponse = {
   scraperResponses: NewsScraperResponse[];
   topHeadlines: NewsHeadline[] | undefined;
+  topTokens: RankedToken[] | undefined;
 };
 
 export class News {
@@ -147,50 +154,58 @@ export class News {
   }
 
   async getHeadlines(params: {
-    type: NewsScraperType;
-    sources: NewsScraperSource[];
-    topHeadlines: {
-      count: number;
-    };
+    type: NewsScraperType,
+    sources: NewsScraperSource[],
+    options?: {
+      topHeadlinesCount?: number,
+      topTokensCount?: number,
+    },
   }): Promise<NewsResponse> {
-    const { type, sources, topHeadlines } = params;
-    let count;
-    if (topHeadlines) {
-      count = topHeadlines.count;
-      if (count === undefined || (typeof count !== 'number' || count < 1)) {
-        throw new Error('count must be a number greater than 0');
+    const { type, sources, options } = params;
+    let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
+    let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
+    if (options) {
+      if (options.topHeadlinesCount !== undefined && options.topHeadlinesCount >= 0) {
+        topHeadlinesCount = options.topHeadlinesCount;
+      }
+      if (options.topTokensCount !== undefined && options.topTokensCount >= 0) {
+        topTokensCount = options.topTokensCount;
       }
     }
 
     const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type, sources);
-    if (!topHeadlines) {
+    if (!options || (!options.topHeadlinesCount && !options.topTokensCount)) {
       return {
         scraperResponses: scraperResponses,
         topHeadlines: undefined,
+        topTokens: undefined,
       };
     }
 
     const tokenizedTitles: string[][][] = this.tokenizeTitles(scraperResponses);
     this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
 
-    const rankedTokens: any[] = this.rankTokens(tokenizedTitles);
-    this.logger.verbose(`News.getHeadlines: rankedTokens: %s`, JSON.stringify(rankedTokens, null, 2));
+    const rankedTokens: RankedToken[] = this.rankTokens(tokenizedTitles);
+    const topRankedTokens: RankedToken[] = []
+    for(let x = 0; x < topTokensCount && rankedTokens.length > x; x++) {
+      topRankedTokens.push(rankedTokens[x]);
+    }
+    this.logger.verbose(`News.getHeadlines: top${topTokensCount}Tokens: %s`, JSON.stringify(topRankedTokens, null, 2));
 
     const scoredTitles: any[] = this.scoreTitles(scraperResponses, rankedTokens);
     this.logger.verbose(`News.getHeadlines: scoredTitles: %s`, JSON.stringify(scoredTitles, null, 2));
 
-    const headlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });
+    const rankedHeadlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });
     const topRankedHeadlines: NewsHeadline[] = []
-    // @ts-ignore
-    for(let x = 0; x < count && headlines.length > x; x++) {
-      topRankedHeadlines.push(headlines[x]);
+    for(let x = 0; x < topHeadlinesCount && rankedHeadlines.length > x; x++) {
+      topRankedHeadlines.push(rankedHeadlines[x]);
     }
-    this.logger.verbose(`News.getHeadlines: top${count}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
+    this.logger.verbose(`News.getHeadlines: top${topHeadlinesCount}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
 
     return {
       scraperResponses: scraperResponses,
-      topHeadlines: topRankedHeadlines,
+      topHeadlines: topRankedHeadlines.length ? topRankedHeadlines : undefined,
+      topTokens: topRankedTokens.length ? topRankedTokens : undefined,
     }
   }
-
 }

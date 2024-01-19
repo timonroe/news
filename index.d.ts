@@ -10,9 +10,15 @@ export declare type NewsHeadline = {
   url: string;
 };
 
+export declare type RankedToken = {
+  token: string;
+  count: number;
+};
+
 export declare type NewsResponse = {
   scraperResponses: NewsScraperResponse[];
   topHeadlines: NewsHeadline[] | undefined;
+  topTokens: RankedToken[] | undefined;
 };
 
 export declare class News {
@@ -20,8 +26,9 @@ export declare class News {
   getHeadlines(params: {
     type: NewsScraperType;
     sources: NewsScraperSource[];
-    topHeadlines: {
-      count: number;
+    options?: {
+      topHeadlinesCount?: number;
+      topTokensCount?: number;
     };
   }): Promise<NewsResponse>;
 }

@@ -9,6 +9,7 @@ import {
   S3Client,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { NewsResponse } from '../../index.js';
 
 const {
   NEWS_HEADLINES_DATA_S3_BUCKET,
@@ -26,7 +27,7 @@ function initResponse(): LambdaResponse {
 }
 
 // Get the headlines from the S3 bucket
-async function getHeadlines() {
+async function getHeadlines(): Promise<NewsResponse> {
   const client = new S3Client({ region: "us-east-1" });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
@@ -53,9 +54,23 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
   logger.verbose('context:', ctx);
   const response = initResponse();
   try {
-    const headlines = await getHeadlines();
-    logger.info(`headlines: ${JSON.stringify(headlines, null, 2)}`);
-    response.body = JSON.stringify(headlines, null, 2);
+    const newsResponse: NewsResponse = await getHeadlines();
+    logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
+    // Only send back what's being used on the client
+    const { scraperResponses } = newsResponse;
+    newsResponse.scraperResponses = scraperResponses.map(scraperResponse => {
+      const { headlines } = scraperResponse;
+      return {
+        ...scraperResponse,
+        headlines: headlines.map(headline => {
+          return {
+            title: headline.title,
+            url: headline.url,
+          };
+        }),
+      };
+    });
+    response.body = JSON.stringify(newsResponse, null, 2);
   } catch (error: any) {
     response.statusCode = 400;
     response.body = JSON.stringify({ error: error.message });

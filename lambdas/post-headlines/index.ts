@@ -13,10 +13,17 @@ import {
   NewsScraperType,
   NewsScraperSource,
 } from '@soralinks/news-scrapers';
-import { News, NewsResponse } from '../../index.js';
+import {
+  DEFAULT_NUM_TOP_HEADLINES,
+  DEFAULT_NUM_TOP_TOKENS,
+  News,
+  NewsResponse
+} from '../../index.js';
 
 const {
   NEWS_HEADLINES_DATA_S3_BUCKET,
+  NEWS_DEFAULT_NUM_TOP_HEADLINES,
+  NEWS_DEFAULT_NUM_TOP_TOKENS,
 } = process.env;
 
 function initResponse(): LambdaResponse {
@@ -55,12 +62,24 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
   logger.verbose('context:', ctx);
   const response = initResponse();
   try {
+    let count;
+    let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
+    if (NEWS_DEFAULT_NUM_TOP_HEADLINES) {
+      count = parseInt(NEWS_DEFAULT_NUM_TOP_HEADLINES, 10);
+      topHeadlinesCount = count >= 0 ? count : topHeadlinesCount;
+    } 
+    let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
+    if (NEWS_DEFAULT_NUM_TOP_TOKENS) {
+      count = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
+      topTokensCount = count >= 0 ? count : topTokensCount;
+    }
     const news: News = new News();
     const newsResponse: NewsResponse = await news.getHeadlines({
       type: NewsScraperType.POLITICS,
       sources: [...Object.values(NewsScraperSource).map(source => source)],
-      topHeadlines: {
-        count: 20,
+      options: {
+        topHeadlinesCount,
+        topTokensCount,
       },
     });
     logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);

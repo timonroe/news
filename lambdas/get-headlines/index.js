@@ -38,9 +38,23 @@ export const handler = async (event, context) => {
     logger.verbose('context:', ctx);
     const response = initResponse();
     try {
-        const headlines = await getHeadlines();
-        logger.info(`headlines: ${JSON.stringify(headlines, null, 2)}`);
-        response.body = JSON.stringify(headlines, null, 2);
+        const newsResponse = await getHeadlines();
+        logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
+        // Only send back what's being used on the client
+        const { scraperResponses } = newsResponse;
+        newsResponse.scraperResponses = scraperResponses.map(scraperResponse => {
+            const { headlines } = scraperResponse;
+            return {
+                ...scraperResponse,
+                headlines: headlines.map(headline => {
+                    return {
+                        title: headline.title,
+                        url: headline.url,
+                    };
+                }),
+            };
+        });
+        response.body = JSON.stringify(newsResponse, null, 2);
     }
     catch (error) {
         response.statusCode = 400;

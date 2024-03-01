@@ -107,7 +107,6 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "files": [
-    "./ignore-tokens.ts",
     "./index.ts",
     "./lambdas/get-headlines/index.ts",
     "./lambdas/post-headlines/index.ts",

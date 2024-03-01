@@ -6,7 +6,6 @@ import {
   NewsScraper,
   NewsScraperFactor,
 } from '@soralinks/news-scrapers';
-import { ignoreTokens } from './ignore-tokens.js';
 
 const {
   LOGGING_NEWS,
@@ -119,7 +118,8 @@ export class News {
 
   // Loop through all of the headlines' titles and create tokens for all of the 
   // words in the title. Ignore words that are of no value, eg. the, is, at, etc.
-  tokenizeTitles(scraperResponses: NewsScraperResponse[]): string[][][] {
+  tokenizeTitles(scraperResponses: NewsScraperResponse[], ignoreTokens?: string[]): string[][][] {
+    ignoreTokens = ignoreTokens && Array.isArray(ignoreTokens) && ignoreTokens.length ? ignoreTokens : undefined;
     return scraperResponses.map(scraperResponse => {
       const { headlines } = scraperResponse;
       return headlines.map(headline => {
@@ -128,7 +128,7 @@ export class News {
         // @ts-ignore
         headline.titleTokens = title.split(' ').map(word => {
           const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase();
-          return !ignoreTokens.includes(token) ? token : undefined;
+          return ignoreTokens && ignoreTokens.includes(token) ? undefined : token;
         }).filter(token => token !== undefined);
         // @ts-ignore
         return headline.titleTokens;
@@ -169,12 +169,13 @@ export class News {
   async getHeadlines(params: {
     type: NewsScraperType,
     sources: NewsScraperSource[],
+    ignoreTokens?: string[],
     options?: {
       topHeadlinesCount?: number,
       topTokensCount?: number,
     },
   }): Promise<NewsResponse> {
-    const { type, sources, options } = params;
+    const { type, sources, ignoreTokens, options } = params;
     let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
     let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
     if (options) {
@@ -195,7 +196,7 @@ export class News {
       };
     }
 
-    const tokenizedTitles: string[][][] = this.tokenizeTitles(scraperResponses);
+    const tokenizedTitles: string[][][] = this.tokenizeTitles(scraperResponses, ignoreTokens);
     this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
 
     const rankedTokens: RankedToken[] = this.rankTokens(tokenizedTitles);

@@ -26,6 +26,7 @@ export declare class News {
   getHeadlines(params: {
     type: NewsScraperType;
     sources: NewsScraperSource[];
+    ignoreTokens?: string[];
     options?: {
       topHeadlinesCount?: number;
       topTokensCount?: number;

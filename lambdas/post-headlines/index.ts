@@ -7,6 +7,7 @@ import {
 } from 'aws-lambda';
 import {
   S3Client,
+  GetObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import {
@@ -54,6 +55,27 @@ async function postHeadlinesToS3(json: any) {
   return response;
 }
 
+// Get the ignoreTokens from the S3 bucket
+async function getIgnoreTokensFromS3(): Promise<string[]> {
+  const client = new S3Client({ region: "us-east-1" });
+  const input = {
+    Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
+    Key: 'ignore-tokens.json',
+  };
+  const command = new GetObjectCommand(input);
+  const response = await client.send(command);
+  const statusCode = response.$metadata.httpStatusCode;
+  if (statusCode !== 200) {
+    throw new Error(`GetObjectCommand returned status code: ${statusCode}`);
+  }
+  if (!response.Body) {
+    throw new Error('GetObjectCommand response.Body is undefined');
+  }
+  const str = await response.Body.transformToString('utf-8');
+  const { ignoreTokens } = JSON.parse(str);
+  return ignoreTokens;
+}
+
 export const handler: LambdaHandler = async (event: LambdaEvent, context: LambdaContext): Promise<LambdaResponse> => {
   const logger: Logger = new Logger({ logInfo: true, logError: true });
   logger.info('Starting: post-headlines Lambda');
@@ -73,10 +95,12 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
       count = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
       topTokensCount = count >= 0 ? count : topTokensCount;
     }
+    const ignoreTokens = await getIgnoreTokensFromS3();
     const news: News = new News();
     const newsResponse: NewsResponse = await news.getHeadlines({
       type: NewsScraperType.POLITICS,
       sources: [...Object.values(NewsScraperSource).map(source => source)],
+      ignoreTokens,
       options: {
         topHeadlinesCount,
         topTokensCount,

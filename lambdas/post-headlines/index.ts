@@ -38,7 +38,7 @@ function initResponse(): LambdaResponse {
 }
 
 // Send the headlines to the S3 bucket
-async function putHeadlines(json: any) {
+async function postHeadlinesToS3(json: any) {
   const client = new S3Client({ region: "us-east-1" });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
@@ -83,7 +83,7 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
       },
     });
     logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
-    await putHeadlines(newsResponse);
+    await postHeadlinesToS3(newsResponse);
     response.body = JSON.stringify(newsResponse);
   } catch (error: any) {
     response.statusCode = 400;

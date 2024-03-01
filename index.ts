@@ -80,6 +80,7 @@ export class News {
     return headlines;
   }
 
+  
   rankTokens(tokenizedTitles: string[][][]): any[] {
     const rankedTokens: any[] = [];
     tokenizedTitles.forEach(sourceTokenizedTitles => {
@@ -109,6 +110,8 @@ export class News {
     return rankedTokens;
   }
 
+  // Loop through all of the headlines' titles and create tokens for all of the 
+  // words in the title. Ignore words that are of no value, eg. the, is, at, etc.
   tokenizeTitles(scraperResponses: NewsScraperResponse[]): string[][][] {
     return scraperResponses.map(scraperResponse => {
       const { headlines } = scraperResponse;
@@ -126,6 +129,7 @@ export class News {
     });
   }
   
+  // Scrape the news sources for headlines
   async scrapeHeadlines(
     type: NewsScraperType,
     sources: NewsScraperSource[]
@@ -153,6 +157,8 @@ export class News {
     return responses;
   }
 
+  // Main entry point into the News class
+  // Get headlines for: type (eg. politics), sources (eg. fox, cnn, etc.)
   async getHeadlines(params: {
     type: NewsScraperType,
     sources: NewsScraperSource[],

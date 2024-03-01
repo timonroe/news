@@ -27,11 +27,11 @@ function initResponse(): LambdaResponse {
 }
 
 // Get the headlines from the S3 bucket
-async function getHeadlines(): Promise<NewsResponse> {
+async function getHeadlinesFromS3(): Promise<NewsResponse> {
   const client = new S3Client({ region: "us-east-1" });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
-    Key: "headlines-politics.json",
+    Key: 'headlines-politics.json',
   };
   const command = new GetObjectCommand(input);
   const response = await client.send(command);
@@ -54,7 +54,7 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
   logger.verbose('context:', ctx);
   const response = initResponse();
   try {
-    const newsResponse: NewsResponse = await getHeadlines();
+    const newsResponse: NewsResponse = await getHeadlinesFromS3();
     logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
     // Only send back what's being used on the client
     const { scraperResponses } = newsResponse;

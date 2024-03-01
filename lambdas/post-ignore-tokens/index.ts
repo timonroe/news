@@ -50,49 +50,17 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
   logger.verbose('context:', ctx);
   const response = initResponse();
   try {
-    const ignoreTokens = [
-      '',
-      'a',
-      'an',
-      'and',
-      'are',
-      'as',
-      'at',
-      'be',
-      'but',
-      'by',
-      'for',
-      'from',
-      'he',
-      'her',
-      'his',
-      'i',
-      'in',
-      'is',
-      'it',
-      'its',
-      'not',
-      'of',
-      'on',
-      'says',
-      'she',
-      'that',
-      'the',
-      'their',
-      'them',
-      'there',
-      'they',
-      'theyre',
-      'this',
-      'to',
-      'we',
-      'what',
-      'will',
-      'with',
-    ];
-    logger.info(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
-    await postIgnoreTokensToS3(ignoreTokens);
-    response.body = JSON.stringify(ignoreTokens);
+    // @ts-ignore
+    const { ignoreTokens } = event;
+    if (ignoreTokens && Array.isArray(ignoreTokens) && ignoreTokens.length) {
+      await postIgnoreTokensToS3(ignoreTokens);
+      logger.info(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
+      response.body = JSON.stringify(ignoreTokens);
+    } else {
+      const msg = 'ignoreTokens were not passed in to the lambda function';
+      logger.info(msg);
+      response.body = JSON.stringify(msg);
+    }
   } catch (error: any) {
     response.statusCode = 400;
     response.body = JSON.stringify({ error: error.message });

@@ -32,6 +32,8 @@ export type NewsResponse = {
   topTokens: RankedToken[] | undefined;
 };
 
+const MIN_TOKEN_COUNT = 2;
+
 export class News {
   logger: Logger;
 
@@ -56,8 +58,13 @@ export class News {
           const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
           if (rankedTok) {
             const { count } = rankedTok;
-            // @ts-ignore
-            headline.titleRank += count;
+            // If the title has a bunch of words (tokens) that have a small count we want to
+            // exclude those from the title's rank. This prevents titles that have a bunch of
+            // low value words from getting ranked too high.
+            if (count >= MIN_TOKEN_COUNT) {
+              // @ts-ignore
+              headline.titleRank += count;
+            }
           }
         });
         return {
@@ -80,7 +87,7 @@ export class News {
     return headlines;
   }
 
-  
+
   rankTokens(tokenizedTitles: string[][][]): any[] {
     const rankedTokens: any[] = [];
     tokenizedTitles.forEach(sourceTokenizedTitles => {

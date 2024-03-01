@@ -4,6 +4,7 @@ import { ignoreTokens } from './ignore-tokens.js';
 const { LOGGING_NEWS, } = process.env;
 export const DEFAULT_NUM_TOP_HEADLINES = 20;
 export const DEFAULT_NUM_TOP_TOKENS = 20;
+const MIN_TOKEN_COUNT = 2;
 export class News {
     logger;
     constructor() {
@@ -27,8 +28,13 @@ export class News {
                     const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
                     if (rankedTok) {
                         const { count } = rankedTok;
-                        // @ts-ignore
-                        headline.titleRank += count;
+                        // If the title has a bunch of words (tokens) that have a small count we want to
+                        // exclude those from the title's rank. This prevents titles that have a bunch of
+                        // low value words from getting ranked too high.
+                        if (count >= MIN_TOKEN_COUNT) {
+                            // @ts-ignore
+                            headline.titleRank += count;
+                        }
                     }
                 });
                 return {
@@ -79,6 +85,8 @@ export class News {
         });
         return rankedTokens;
     }
+    // Loop through all of the headlines' titles and create tokens for all of the 
+    // words in the title. Ignore words that are of no value, eg. the, is, at, etc.
     tokenizeTitles(scraperResponses) {
         return scraperResponses.map(scraperResponse => {
             const { headlines } = scraperResponse;
@@ -95,6 +103,7 @@ export class News {
             });
         });
     }
+    // Scrape the news sources for headlines
     async scrapeHeadlines(type, sources) {
         let responses = [];
         try {
@@ -117,6 +126,8 @@ export class News {
         }
         return responses;
     }
+    // Main entry point into the News class
+    // Get headlines for: type (eg. politics), sources (eg. fox, cnn, etc.)
     async getHeadlines(params) {
         const { type, sources, options } = params;
         let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;

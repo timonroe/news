@@ -111,6 +111,7 @@
     "./index.ts",
     "./lambdas/get-headlines/index.ts",
     "./lambdas/post-headlines/index.ts",
+    "./lambdas/post-ignore-tokens/index.ts",
     "./tests/functional/index.ts"
   ],
   // "exclude": [

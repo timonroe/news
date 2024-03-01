@@ -14,7 +14,7 @@ function initResponse() {
     };
 }
 // Send the headlines to the S3 bucket
-async function putHeadlines(json) {
+async function postHeadlinesToS3(json) {
     const client = new S3Client({ region: "us-east-1" });
     const input = {
         Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
@@ -58,7 +58,7 @@ export const handler = async (event, context) => {
             },
         });
         logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
-        await putHeadlines(newsResponse);
+        await postHeadlinesToS3(newsResponse);
         response.body = JSON.stringify(newsResponse);
     }
     catch (error) {

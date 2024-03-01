@@ -53,7 +53,7 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
     // @ts-ignore
     const { ignoreTokens } = event;
     if (ignoreTokens && Array.isArray(ignoreTokens) && ignoreTokens.length) {
-      await postIgnoreTokensToS3(ignoreTokens);
+      await postIgnoreTokensToS3({ ignoreTokens });
       logger.info(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
       response.body = JSON.stringify(ignoreTokens);
     } else {

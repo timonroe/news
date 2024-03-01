@@ -38,7 +38,7 @@ export const handler = async (event, context) => {
         // @ts-ignore
         const { ignoreTokens } = event;
         if (ignoreTokens && Array.isArray(ignoreTokens) && ignoreTokens.length) {
-            await postIgnoreTokensToS3(ignoreTokens);
+            await postIgnoreTokensToS3({ ignoreTokens });
             logger.info(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
             response.body = JSON.stringify(ignoreTokens);
         }

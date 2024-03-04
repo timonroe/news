@@ -27,7 +27,7 @@ function initResponse(): LambdaResponse {
 
 // Send the synonym tokens to the S3 bucket
 async function postSynonymTokensToS3(json: any) {
-  const client = new S3Client({ region: "us-east-1" });
+  const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
     Key: 'synonym-tokens.json',

@@ -40,7 +40,7 @@ function initResponse(): LambdaResponse {
 
 // Send the headlines to the S3 bucket
 async function postHeadlinesToS3(json: any) {
-  const client = new S3Client({ region: "us-east-1" });
+  const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
     Key: 'headlines-politics.json',
@@ -57,7 +57,7 @@ async function postHeadlinesToS3(json: any) {
 
 // Get the ignoreTokens from the S3 bucket
 async function getIgnoreTokensFromS3(): Promise<string[]> {
-  const client = new S3Client({ region: "us-east-1" });
+  const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
     Key: 'ignore-tokens.json',

@@ -28,7 +28,7 @@ function initResponse(): LambdaResponse {
 
 // Get the headlines from the S3 bucket
 async function getHeadlinesFromS3(): Promise<NewsResponse> {
-  const client = new S3Client({ region: "us-east-1" });
+  const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
     Key: 'headlines-politics.json',

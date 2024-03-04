@@ -15,7 +15,7 @@ function initResponse() {
 }
 // Send the headlines to the S3 bucket
 async function postHeadlinesToS3(json) {
-    const client = new S3Client({ region: "us-east-1" });
+    const client = new S3Client({ region: 'us-east-1' });
     const input = {
         Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
         Key: 'headlines-politics.json',
@@ -31,7 +31,7 @@ async function postHeadlinesToS3(json) {
 }
 // Get the ignoreTokens from the S3 bucket
 async function getIgnoreTokensFromS3() {
-    const client = new S3Client({ region: "us-east-1" });
+    const client = new S3Client({ region: 'us-east-1' });
     const input = {
         Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
         Key: 'ignore-tokens.json',

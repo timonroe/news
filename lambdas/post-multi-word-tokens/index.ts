@@ -27,7 +27,7 @@ function initResponse(): LambdaResponse {
 
 // Send the mult-word tokens to the S3 bucket
 async function postMultiWordTokensToS3(json: any) {
-  const client = new S3Client({ region: "us-east-1" });
+  const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
     Key: 'multi-word-tokens.json',

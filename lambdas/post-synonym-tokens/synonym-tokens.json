@@ -1,0 +1,25 @@
+{
+  "synonymTokens": [
+    {
+      "donald trump": [
+        "president donald trump",
+        "donald trump",
+        "president trump",
+        "trump"
+      ]
+    },
+    {
+      "nikki haley": [
+        "haley"
+      ]
+    },
+    {
+      "joe biden": [
+        "president joe biden",
+        "joe biden",
+        "president biden",
+        "biden"
+      ]
+    }
+  ]
+}

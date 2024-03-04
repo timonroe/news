@@ -111,6 +111,8 @@
     "./lambdas/get-headlines/index.ts",
     "./lambdas/post-headlines/index.ts",
     "./lambdas/post-ignore-tokens/index.ts",
+    "./lambdas/post-multi-word-tokens/index.ts",
+    "./lambdas/post-synonym-tokens/index.ts",
     "./tests/functional/index.ts"
   ],
   // "exclude": [

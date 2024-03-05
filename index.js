@@ -88,6 +88,7 @@ export class News {
     // words in the title. Ignore words that are of no value, eg. the, is, at, etc.
     tokenizeTitles(params) {
         const { scraperResponses } = params;
+        // Validate the tokens getting passed in
         let { ignoreTokens, multiWordTokens, synonymTokens } = params;
         ignoreTokens = ignoreTokens && Array.isArray(ignoreTokens) && ignoreTokens.length ? ignoreTokens : undefined;
         multiWordTokens = multiWordTokens && Array.isArray(multiWordTokens) && multiWordTokens.length ? multiWordTokens : undefined;
@@ -96,14 +97,59 @@ export class News {
             const { headlines } = scraperResponse;
             return headlines.map(headline => {
                 const { title } = headline;
+                const titleTokens = [];
+                // Tokenize the tile, remove the uneeded ignore tokens
+                let tokenizedTitle = title.split(' ').map(word => {
+                    const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase(); // convert the word to a token
+                    return ignoreTokens && ignoreTokens.includes(token) ? undefined : token;
+                }).filter(token => token !== undefined).join(' ');
+                // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
+                // Note: this step must come before the synonymTokens step below
+                if (multiWordTokens) {
+                    multiWordTokens.forEach(multiWordToken => {
+                        const idx = tokenizedTitle.indexOf(multiWordToken);
+                        // If we find the token in the tokenizedTitle
+                        if (idx !== -1) {
+                            titleTokens.push(multiWordToken);
+                            // Remove *all* instances of the token from the tokenizedTitle
+                            const regex = new RegExp(multiWordToken, 'g');
+                            tokenizedTitle = tokenizedTitle.replace(regex, '');
+                        }
+                    });
+                }
+                // Extract the synonym tokens from the tokenizedTitle and add them to the titleTokens
+                if (synonymTokens) {
+                    synonymTokens.forEach(entry => {
+                        // Loop through all of the synonym tokens
+                        for (const [synonymToken, valueTokens] of Object.entries(entry)) {
+                            let addedSynonymToken = false;
+                            // Loop through all of the values tokens for this synonym token
+                            valueTokens.forEach((valueToken) => {
+                                const idx = tokenizedTitle.indexOf(valueToken);
+                                // If we find the token in the tokenizedTitle
+                                if (idx !== -1) {
+                                    // Add the synonymToken *once* to the titleTokens array
+                                    if (!addedSynonymToken) {
+                                        titleTokens.push(synonymToken);
+                                        addedSynonymToken = true;
+                                    }
+                                    // Remove *all* instances of the token from the tokenizedTitle
+                                    const regex = new RegExp(valueToken, 'g');
+                                    tokenizedTitle = tokenizedTitle.replace(regex, '');
+                                }
+                            });
+                        }
+                    });
+                }
+                // Add the remaining tokens in the tokenizedTitle to the titleTokens array
+                tokenizedTitle.split(' ').map(token => {
+                    if (token)
+                        titleTokens.push(token);
+                });
                 // Adding a new field (titleTokens) to the NewsScraperHeadline type
                 // @ts-ignore
-                headline.titleTokens = title.split(' ').map(word => {
-                    const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase();
-                    return ignoreTokens && ignoreTokens.includes(token) ? undefined : token;
-                }).filter(token => token !== undefined);
-                // @ts-ignore
-                return headline.titleTokens;
+                headline.titleTokens = titleTokens;
+                return titleTokens;
             });
         });
     }

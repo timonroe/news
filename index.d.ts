@@ -27,6 +27,8 @@ export declare class News {
     type: NewsScraperType;
     sources: NewsScraperSource[];
     ignoreTokens?: string[];
+    multiWordTokens?: string[],
+    synonymTokens?: object[],
     options?: {
       topHeadlinesCount?: number;
       topTokensCount?: number;

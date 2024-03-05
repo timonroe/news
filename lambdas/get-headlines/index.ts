@@ -13,6 +13,7 @@ import { NewsResponse } from '../../index.js';
 
 const {
   NEWS_HEADLINES_DATA_S3_BUCKET,
+  NEWS_HEADLINES_FILENAME,
 } = process.env;
 
 function initResponse(): LambdaResponse {
@@ -31,7 +32,7 @@ async function getHeadlinesFromS3(): Promise<NewsResponse> {
   const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
-    Key: 'headlines-politics.json',
+    Key: NEWS_HEADLINES_FILENAME,
   };
   const command = new GetObjectCommand(input);
   const response = await client.send(command);

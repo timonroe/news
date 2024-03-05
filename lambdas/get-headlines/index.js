@@ -1,6 +1,6 @@
 import { Logger } from '@soralinks/logger';
 import { S3Client, GetObjectCommand, } from "@aws-sdk/client-s3";
-const { NEWS_HEADLINES_DATA_S3_BUCKET, } = process.env;
+const { NEWS_HEADLINES_DATA_S3_BUCKET, NEWS_HEADLINES_FILENAME, } = process.env;
 function initResponse() {
     return {
         isBase64Encoded: false,
@@ -16,7 +16,7 @@ async function getHeadlinesFromS3() {
     const client = new S3Client({ region: 'us-east-1' });
     const input = {
         Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
-        Key: 'headlines-politics.json',
+        Key: NEWS_HEADLINES_FILENAME,
     };
     const command = new GetObjectCommand(input);
     const response = await client.send(command);

@@ -12,6 +12,7 @@ import {
 
 const {
   NEWS_HEADLINES_DATA_S3_BUCKET,
+  NEWS_IGNORE_TOKENS_FILENAME,
 } = process.env;
 
 function initResponse(): LambdaResponse {
@@ -30,7 +31,7 @@ async function postIgnoreTokensToS3(json: any) {
   const client = new S3Client({ region: 'us-east-1' });
   const input = {
     Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
-    Key: 'ignore-tokens.json',
+    Key: NEWS_IGNORE_TOKENS_FILENAME,
     Body: JSON.stringify(json),
   };
   const command = new PutObjectCommand(input);

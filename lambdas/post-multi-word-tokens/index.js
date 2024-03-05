@@ -1,6 +1,6 @@
 import { Logger } from '@soralinks/logger';
 import { S3Client, PutObjectCommand, } from "@aws-sdk/client-s3";
-const { NEWS_HEADLINES_DATA_S3_BUCKET, } = process.env;
+const { NEWS_HEADLINES_DATA_S3_BUCKET, NEWS_MULTI_WORD_TOKENS_FILENAME, } = process.env;
 function initResponse() {
     return {
         isBase64Encoded: false,
@@ -16,7 +16,7 @@ async function postMultiWordTokensToS3(json) {
     const client = new S3Client({ region: 'us-east-1' });
     const input = {
         Bucket: NEWS_HEADLINES_DATA_S3_BUCKET,
-        Key: 'multi-word-tokens.json',
+        Key: NEWS_MULTI_WORD_TOKENS_FILENAME,
         Body: JSON.stringify(json),
     };
     const command = new PutObjectCommand(input);

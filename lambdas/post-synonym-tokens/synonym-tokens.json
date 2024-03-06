@@ -1,6 +1,19 @@
 {
   "synonymTokens": [
     {
+      "adam schiff": [
+        "rep adam schiff",
+        "adam schiff",
+        "schiff"
+      ]
+    },
+    {
+      "democratic primary": [
+        "democratic primary",
+        "democratic primaries"
+      ]
+    },
+    {
       "donald trump": [
         "president donald trump",
         "donald trump",
@@ -17,6 +30,12 @@
       ]
     },
     {
+      "lauren boebert": [
+        "lauren boebert",
+        "boebert"
+      ]
+    },
+    {
       "mitch mcconnell": [
         "mitch mcconnell",
         "mcconnell"
@@ -26,6 +45,18 @@
       "nikki haley": [
         "nikki haley",
         "haley"
+      ]
+    },
+    {
+      "republican primary": [
+        "republican primary",
+        "republican primaries"
+      ]
+    },
+    {
+      "ted cruz": [
+        "ted cruz",
+        "cruz"
       ]
     }
   ]

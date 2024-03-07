@@ -24,7 +24,7 @@ export class News {
                 // @ts-ignore
                 headline.titleRank = 0;
                 titleTokens.forEach((token) => {
-                    const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+                    const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token); // case-sensitive search
                     if (rankedTok) {
                         const { count } = rankedTok;
                         // If the title has a bunch of words (tokens) that have a small count we want to
@@ -60,7 +60,7 @@ export class News {
         tokenizedTitles.forEach(sourceTokenizedTitles => {
             sourceTokenizedTitles.forEach(titleTokens => {
                 titleTokens.forEach(token => {
-                    const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+                    const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token); // case-sensitive search
                     if (rankedTok) {
                         rankedTok.count += 1;
                     }
@@ -98,22 +98,22 @@ export class News {
             return headlines.map(headline => {
                 const { title } = headline;
                 const titleTokens = [];
-                // Tokenize the tile, remove the uneeded ignore tokens
+                // Tokenize the tile
                 let tokenizedTitle = title.split(' ').map(word => {
-                    const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase(); // convert the word to a token
-                    return ignoreTokens && ignoreTokens.includes(token) ? undefined : token;
-                }).filter(token => token !== undefined).join(' ');
+                    // Convert the word to a token, removing commas, punctuation, etc.
+                    return word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '');
+                }).filter(token => token !== '').join(' ');
                 // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
                 // Note: this step must come before the synonymTokens step below
                 if (multiWordTokens) {
                     multiWordTokens.forEach(multiWordToken => {
-                        const idx = tokenizedTitle.indexOf(multiWordToken);
+                        const idx = tokenizedTitle.indexOf(multiWordToken); // case-sensitive search
                         // If we find the token in the tokenizedTitle
                         if (idx !== -1) {
                             titleTokens.push(multiWordToken);
                             // Remove *all* instances of the token from the tokenizedTitle
                             const regex = new RegExp(multiWordToken, 'g');
-                            tokenizedTitle = tokenizedTitle.replace(regex, '');
+                            tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
                         }
                     });
                 }
@@ -125,7 +125,7 @@ export class News {
                             let addedSynonymToken = false;
                             // Loop through all of the values tokens for this synonym token
                             valueTokens.forEach((valueToken) => {
-                                const idx = tokenizedTitle.indexOf(valueToken);
+                                const idx = tokenizedTitle.indexOf(valueToken); // case-sensitive search
                                 // If we find the token in the tokenizedTitle
                                 if (idx !== -1) {
                                     // Add the synonymToken *once* to the titleTokens array
@@ -135,12 +135,16 @@ export class News {
                                     }
                                     // Remove *all* instances of the token from the tokenizedTitle
                                     const regex = new RegExp(valueToken, 'g');
-                                    tokenizedTitle = tokenizedTitle.replace(regex, '');
+                                    tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
                                 }
                             });
                         }
                     });
                 }
+                // Remove the uneeded ignore tokens from the tokenizedTitle
+                tokenizedTitle = tokenizedTitle.split(' ').map(token => {
+                    return ignoreTokens && ignoreTokens.includes(token) ? undefined : token; // case-sensitive search
+                }).filter(token => token !== undefined).join(' ');
                 // Add the remaining tokens in the tokenizedTitle to the titleTokens array
                 tokenizedTitle.split(' ').map(token => {
                     if (token)

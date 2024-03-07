@@ -138,12 +138,11 @@ export class News {
         const { title } = headline;
         const titleTokens: string[] = [];
 
-        // Tokenize the tile, remove the uneeded ignore tokens
+        // Tokenize the tile
         let tokenizedTitle = title.split(' ').map(word => {
-          // Remove commas, punctuation, etc. from the token
-          const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase(); // convert the word to a token
-          return ignoreTokens && ignoreTokens.includes(token) ? undefined : token; // case-sensitive search
-        }).filter(token => token !== undefined).join(' ');
+          // Convert the word to a token, removing commas, punctuation, etc.
+          return word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '');
+        }).filter(token => token !== '').join(' ');
 
         // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
         // Note: this step must come before the synonymTokens step below
@@ -184,6 +183,11 @@ export class News {
             }
           });
         }
+
+        // Remove the uneeded ignore tokens from the tokenizedTitle
+        tokenizedTitle = tokenizedTitle.split(' ').map(token => {
+          return ignoreTokens && ignoreTokens.includes(token) ? undefined : token; // case-sensitive search
+        }).filter(token => token !== undefined).join(' ');
 
         // Add the remaining tokens in the tokenizedTitle to the titleTokens array
         tokenizedTitle.split(' ').map(token => {

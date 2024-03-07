@@ -1,62 +1,62 @@
 {
   "synonymTokens": [
     {
-      "adam schiff": [
-        "rep adam schiff",
-        "adam schiff",
-        "schiff"
+      "Adam Schiff": [
+        "Rep Adam Schiff",
+        "Adam Schiff",
+        "Schiff"
       ]
     },
     {
-      "democratic primary": [
-        "democratic primary",
-        "democratic primaries"
+      "Democratic Primary": [
+        "Democratic Primary",
+        "Democratic Primaries"
       ]
     },
     {
-      "donald trump": [
-        "president donald trump",
-        "donald trump",
-        "president trump",
-        "trump"
+      "Donald Trump": [
+        "President Donald Trump",
+        "Donald Trump",
+        "President Trump",
+        "Trump"
       ]
     },
     {
-      "joe biden": [
-        "president joe biden",
-        "joe biden",
-        "president biden",
-        "biden"
+      "Joe Biden": [
+        "President Joe Biden",
+        "Joe Biden",
+        "President Biden",
+        "Biden"
       ]
     },
     {
-      "lauren boebert": [
-        "lauren boebert",
-        "boebert"
+      "Lauren Boebert": [
+        "Lauren Boebert",
+        "Boebert"
       ]
     },
     {
-      "mitch mcconnell": [
-        "mitch mcconnell",
-        "mcconnell"
+      "Mitch McConnell": [
+        "Mitch McConnell",
+        "McConnell"
       ]
     },
     {
-      "nikki haley": [
-        "nikki haley",
-        "haley"
+      "Nikki Haley": [
+        "Nikki Haley",
+        "Haley"
       ]
     },
     {
-      "republican primary": [
-        "republican primary",
-        "republican primaries"
+      "Republican Primary": [
+        "Republican Primary",
+        "Republican Primaries"
       ]
     },
     {
-      "ted cruz": [
-        "ted cruz",
-        "cruz"
+      "Ted Cruz": [
+        "Ted Cruz",
+        "Cruz"
       ]
     }
   ]

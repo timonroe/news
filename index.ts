@@ -14,6 +14,8 @@ const {
 export const DEFAULT_NUM_TOP_HEADLINES = 20;
 export const DEFAULT_NUM_TOP_TOKENS = 20;
 
+const MIN_TOKEN_COUNT = 2;
+
 export type NewsHeadline = {
   source: string;
   title: string;
@@ -30,8 +32,6 @@ export type NewsResponse = {
   topHeadlines: NewsHeadline[] | undefined;
   topTokens: RankedToken[] | undefined;
 };
-
-const MIN_TOKEN_COUNT = 2;
 
 export class News {
   logger: Logger;
@@ -54,7 +54,7 @@ export class News {
         // @ts-ignore
         headline.titleRank = 0;
         titleTokens.forEach((token: any) => {
-          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token); // case-sensitive search
           if (rankedTok) {
             const { count } = rankedTok;
             // If the title has a bunch of words (tokens) that have a small count we want to
@@ -92,7 +92,7 @@ export class News {
     tokenizedTitles.forEach(sourceTokenizedTitles => {
       sourceTokenizedTitles.forEach(titleTokens => {   
         titleTokens.forEach(token => {
-          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token);
+          const rankedTok = rankedTokens.find(rankedToken => rankedToken.token === token); // case-sensitive search
           if (rankedTok) {
             rankedTok.count += 1;
           } else {
@@ -140,15 +140,16 @@ export class News {
 
         // Tokenize the tile, remove the uneeded ignore tokens
         let tokenizedTitle = title.split(' ').map(word => {
+          // Remove commas, punctuation, etc. from the token
           const token = word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '').toLowerCase(); // convert the word to a token
-          return ignoreTokens && ignoreTokens.includes(token) ? undefined : token;
+          return ignoreTokens && ignoreTokens.includes(token) ? undefined : token; // case-sensitive search
         }).filter(token => token !== undefined).join(' ');
 
         // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
         // Note: this step must come before the synonymTokens step below
         if (multiWordTokens) {
           multiWordTokens.forEach(multiWordToken => {
-            const idx = tokenizedTitle.indexOf(multiWordToken);
+            const idx = tokenizedTitle.indexOf(multiWordToken); // case-sensitive search
             // If we find the token in the tokenizedTitle
             if (idx !== -1) {
               titleTokens.push(multiWordToken);
@@ -167,7 +168,7 @@ export class News {
               let addedSynonymToken = false;
               // Loop through all of the values tokens for this synonym token
               valueTokens.forEach((valueToken: string) => {
-                const idx = tokenizedTitle.indexOf(valueToken);
+                const idx = tokenizedTitle.indexOf(valueToken); // case-sensitive search
                 // If we find the token in the tokenizedTitle
                 if (idx !== -1) {
                   // Add the synonymToken *once* to the titleTokens array

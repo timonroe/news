@@ -155,7 +155,7 @@ export class News {
               titleTokens.push(multiWordToken);
               // Remove *all* instances of the token from the tokenizedTitle
               const regex = new RegExp(multiWordToken, 'g');
-              tokenizedTitle = tokenizedTitle.replace(regex, '');
+              tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
             }
           });
         }
@@ -178,7 +178,7 @@ export class News {
                   }
                   // Remove *all* instances of the token from the tokenizedTitle
                   const regex = new RegExp(valueToken, 'g');
-                  tokenizedTitle = tokenizedTitle.replace(regex, '');
+                  tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
                 }
               });
             }

@@ -10,21 +10,17 @@ News utility
 ```javascript
 import {
   NewsScraperType,
-  NewsScraperSource
+  NewsScraperSource,
+  NewsScraperResponse
 } from '@soralinks/news-scrapers';
-import { News, NewsResponse } from '@soralinks/news';
+import { News } from '@soralinks/news';
 
 (async () => {
-  const news: News = new News();
-  const newsResponse: NewsResponse = await news.getHeadlines({
-    type: NewsScraperType.POLITICS,
-    sources: [...Object.values(NewsScraperSource).map(source => source)],
-    options: {
-      topHeadlinesCount: 20,
-      topTokensCount: 20,
-    },
-  });
-  console.log(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
+  const news = new News();
+    const type = NewsScraperType.POLITICS;
+    const sources = [...Object.values(NewsScraperSource).map(source => source)];
+    const scraperResponses = await news.scrapeHeadlines(type, sources);
+    console.log(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
 })();
 ```
 

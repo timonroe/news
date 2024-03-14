@@ -11,14 +11,14 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import {
-  NewsScraperType,
   NewsScraperSource,
+  NewsScraperResponse,
 } from '@soralinks/news-scrapers';
 import {
-  DEFAULT_NUM_TOP_HEADLINES,
-  DEFAULT_NUM_TOP_TOKENS,
+  NewsHeadline,
+  RankedToken,
+  NewsResponse,
   News,
-  NewsResponse
 } from '../../index.js';
 
 const {
@@ -98,19 +98,13 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
   const response = initResponse();
   try {
     // Get values from the environment variables
-    let count;
-    let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
-    if (NEWS_DEFAULT_NUM_TOP_HEADLINES) {
-      count = parseInt(NEWS_DEFAULT_NUM_TOP_HEADLINES, 10);
-      topHeadlinesCount = count >= 0 ? count : topHeadlinesCount;
-    }
+    // @ts-ignore
+    const topHeadlinesCount = parseInt(NEWS_DEFAULT_NUM_TOP_HEADLINES, 10);
     logger.verbose(`topHeadlinesCount: ${topHeadlinesCount}`);
-    let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
-    if (NEWS_DEFAULT_NUM_TOP_TOKENS) {
-      count = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
-      topTokensCount = count >= 0 ? count : topTokensCount;
-    }
+    // @ts-ignore
+    const topTokensCount = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
     logger.verbose(`topTokensCount: ${topTokensCount}`);
+
     // Get the tokens from S3
     const {
       ignoreTokens,
@@ -120,24 +114,58 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
     logger.verbose(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
     logger.verbose(`multiWordTokens: ${JSON.stringify(multiWordTokens, null, 2)}`);
     logger.verbose(`synonymTokens: ${JSON.stringify(synonymTokens, null, 2)}`);
+
     // Get the headlines from the news sources
     const news: News = new News();
-    const newsResponse: NewsResponse = await news.getHeadlines({
-      // @ts-ignore
-      type: NEWS_SCRAPER_TYPE,
-      sources: [...Object.values(NewsScraperSource).map(source => source)],
+    const type = NEWS_SCRAPER_TYPE;
+    const sources = [...Object.values(NewsScraperSource).map(source => source)];
+    // @ts-ignore
+    const scraperResponses: NewsScraperResponse[] = await news.scrapeHeadlines(type, sources);
+    logger.verbose(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
+   
+    // Tokenize the titles
+    const tokenizedTitles: string[][][] = news.tokenizeTitles({
+      scraperResponses,
       ignoreTokens,
       multiWordTokens,
       synonymTokens,
-      options: {
-        topHeadlinesCount,
-        topTokensCount,
-      },
     });
-    logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
-    // Post the headlines data to S3
+    logger.verbose(`tokenizedTitles: ${JSON.stringify(tokenizedTitles, null, 2)}`);
+
+    // Rank the tokens
+    const rankedTokens: RankedToken[] = news.rankTokens(tokenizedTitles);
+    logger.verbose(`rankedTokens: ${JSON.stringify(rankedTokens, null, 2)}`);
+
+    // Get the top ranked tokens
+    const topRankedTokens: RankedToken[] = []
+    for(let x = 0; x < topTokensCount && rankedTokens.length > x; x++) {
+      topRankedTokens.push(rankedTokens[x]);
+    }
+    logger.verbose(`top${topTokensCount}Tokens: ${JSON.stringify(topRankedTokens, null, 2)}`);
+
+    // Score the titles based on the ranked tokens
+    const scoredTitles: any[] = news.scoreTitles(scraperResponses, rankedTokens);
+    logger.verbose(`scoredTitles: ${JSON.stringify(scoredTitles, null, 2)}`);
+
+    // Get the top ranked headlines
+    const rankedHeadlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });
+    const topRankedHeadlines: NewsHeadline[] = []
+    for(let x = 0; x < topHeadlinesCount && rankedHeadlines.length > x; x++) {
+      topRankedHeadlines.push(rankedHeadlines[x]);
+    }
+    logger.verbose(`top${topHeadlinesCount}Headlines: ${JSON.stringify(topRankedHeadlines, null, 2)}`);
+
+    // Post the headlines to S3
+    const newsResponse: NewsResponse = {
+      scraperResponses: scraperResponses,
+      topHeadlines: topRankedHeadlines.length ? topRankedHeadlines : undefined,
+      topTokens: topRankedTokens.length ? topRankedTokens : undefined,
+    };
     await postHeadlinesToS3(newsResponse);
+
+    // Setup the response to be returned to the caller
     response.body = JSON.stringify(newsResponse);
+
   } catch (error: any) {
     response.statusCode = 400;
     response.body = JSON.stringify({ error: error.message });

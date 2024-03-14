@@ -23,15 +23,16 @@ export declare type NewsResponse = {
 
 export declare class News {
   constructor();
-  getHeadlines(params: {
-    type: NewsScraperType;
-    sources: NewsScraperSource[];
-    ignoreTokens?: string[];
+  scoreTitles(scraperResponses: NewsScraperResponse[], rankedTokens: any[]): any[];
+  rankTokens(tokenizedTitles: string[][][]): any[];
+  tokenizeTitles(params: {
+    scraperResponses: NewsScraperResponse[],
+    ignoreTokens?: string[],
     multiWordTokens?: string[],
     synonymTokens?: object[],
-    options?: {
-      topHeadlinesCount?: number;
-      topTokensCount?: number;
-    };
-  }): Promise<NewsResponse>;
+  }): string[][][];
+  scrapeHeadlines(
+    type: NewsScraperType,
+    sources: NewsScraperSource[]
+  ): Promise<NewsScraperResponse[]>;
 }

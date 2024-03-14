@@ -11,9 +11,6 @@ const {
   LOGGING_NEWS,
 } = process.env;
 
-export const DEFAULT_NUM_TOP_HEADLINES = 20;
-export const DEFAULT_NUM_TOP_TOKENS = 20;
-
 const MIN_TOKEN_COUNT = 2;
 
 export type NewsHeadline = {
@@ -229,71 +226,5 @@ export class News {
       throw error;
     }
     return responses;
-  }
-
-  // Main entry point into the News class
-  // Get headlines for: type (eg. politics), sources (eg. fox, cnn, etc.)
-  async getHeadlines(params: {
-    type: NewsScraperType,
-    sources: NewsScraperSource[],
-    ignoreTokens?: string[],
-    multiWordTokens?: string[],
-    synonymTokens?: object[],
-    options?: {
-      topHeadlinesCount?: number,
-      topTokensCount?: number,
-    },
-  }): Promise<NewsResponse> {
-    const { type, sources, ignoreTokens, multiWordTokens, synonymTokens, options } = params;
-    let topHeadlinesCount = DEFAULT_NUM_TOP_HEADLINES;
-    let topTokensCount = DEFAULT_NUM_TOP_TOKENS;
-    if (options) {
-      if (options.topHeadlinesCount !== undefined && options.topHeadlinesCount >= 0) {
-        topHeadlinesCount = options.topHeadlinesCount;
-      }
-      if (options.topTokensCount !== undefined && options.topTokensCount >= 0) {
-        topTokensCount = options.topTokensCount;
-      }
-    }
-
-    const scraperResponses: NewsScraperResponse[] = await this.scrapeHeadlines(type, sources);
-    if (!options || (!options.topHeadlinesCount && !options.topTokensCount)) {
-      return {
-        scraperResponses: scraperResponses,
-        topHeadlines: undefined,
-        topTokens: undefined,
-      };
-    }
-
-    const tokenizedTitles: string[][][] = this.tokenizeTitles({
-      scraperResponses,
-      ignoreTokens,
-      multiWordTokens,
-      synonymTokens,
-    });
-    this.logger.verbose(`News.getHeadlines: tokenizedTitles: %s`, JSON.stringify(tokenizedTitles, null, 2));
-
-    const rankedTokens: RankedToken[] = this.rankTokens(tokenizedTitles);
-    const topRankedTokens: RankedToken[] = []
-    for(let x = 0; x < topTokensCount && rankedTokens.length > x; x++) {
-      topRankedTokens.push(rankedTokens[x]);
-    }
-    this.logger.verbose(`News.getHeadlines: top${topTokensCount}Tokens: %s`, JSON.stringify(topRankedTokens, null, 2));
-
-    const scoredTitles: any[] = this.scoreTitles(scraperResponses, rankedTokens);
-    this.logger.verbose(`News.getHeadlines: scoredTitles: %s`, JSON.stringify(scoredTitles, null, 2));
-
-    const rankedHeadlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });
-    const topRankedHeadlines: NewsHeadline[] = []
-    for(let x = 0; x < topHeadlinesCount && rankedHeadlines.length > x; x++) {
-      topRankedHeadlines.push(rankedHeadlines[x]);
-    }
-    this.logger.verbose(`News.getHeadlines: top${topHeadlinesCount}Headlines: %s`, JSON.stringify(topRankedHeadlines, null, 2));
-
-    return {
-      scraperResponses: scraperResponses,
-      topHeadlines: topRankedHeadlines.length ? topRankedHeadlines : undefined,
-      topTokens: topRankedTokens.length ? topRankedTokens : undefined,
-    }
   }
 }

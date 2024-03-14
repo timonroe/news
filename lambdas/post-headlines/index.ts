@@ -162,6 +162,7 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
       topTokens: topRankedTokens.length ? topRankedTokens : undefined,
     };
     await postHeadlinesToS3(newsResponse);
+    logger.info(`newsResponse: ${JSON.stringify(newsResponse, null, 2)}`);
 
     // Setup the response to be returned to the caller
     response.body = JSON.stringify(newsResponse);

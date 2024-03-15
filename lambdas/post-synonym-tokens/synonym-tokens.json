@@ -2,9 +2,42 @@
   "synonymTokens": [
     {
       "Adam Schiff": [
+        "Representative Adam Schiff",
         "Rep Adam Schiff",
         "Adam Schiff",
+        "Representative Schiff",
+        "Rep Schiff",
         "Schiff"
+      ]
+    },
+    {
+      "Bernie Sanders": [
+        "Senator Bernie Sanders",
+        "Sen Bernie Sanders",
+        "Bernie Sanders",
+        "Senator Sanders",
+        "Sen Sanders",
+        "Sanders"
+      ]
+    },
+    {
+      "Bob Menendez": [
+        "Senator Bob Menendez",
+        "Sen Bob Menendez",
+        "Bob Menendez",
+        "Senator Menendez",
+        "Sen Menendez",
+        "Menendez"
+      ]
+    },
+    {
+      "Chuck Schumer": [
+        "Senator Chuck Schumer",
+        "Sen Chuck Schumer",
+        "Chuck Schumer",
+        "Senator Schumer",
+        "Sen Schumer",
+        "Schumer"
       ]
     },
     {
@@ -16,34 +49,138 @@
     {
       "Donald Trump": [
         "President Donald Trump",
+        "Pres Donald Trump",
         "Donald Trump",
         "President Trump",
+        "Pres Trump",
         "Trump"
+      ]
+    },
+    {
+      "Elon Musk": [
+        "Elon Musk",
+        "Musk"
+      ]
+    },
+    {
+      "Greg Abbott": [
+        "Governor Greg Abbott",
+        "Gov Greg Abbott",
+        "Greg Abbott",
+        "Governor Abbott",
+        "Gov Abbott",
+        "Abbott"
+      ]
+    },
+    {
+      "January 6 Committee": [
+        "January 6 Committee",
+        "Jan 6 Committee"
+      ]
+    },
+    {
+      "Jimmy Carter": [
+        "President Jimmy Carter",
+        "Pres Jimmy Carter",
+        "Jimmy Carter",
+        "President Carter",
+        "Pres Carter",
+        "Carter"
       ]
     },
     {
       "Joe Biden": [
         "President Joe Biden",
+        "Pres Joe Biden",
         "Joe Biden",
         "President Biden",
+        "Pres Biden",
         "Biden"
       ]
     },
     {
+      "John Barrasso": [
+        "Senator John Barrasso",
+        "Sen John Barrasso",
+        "John Barrasso",
+        "Senator Barrasso",
+        "Sen Barrasso",
+        "Barrasso"
+      ]
+    },
+    {
+      "Kamala Harris": [
+        "Vice President Kamala Harris",
+        "Vice Pres Kamala Harris",
+        "VP Kamala Harris",
+        "Kamala Harris",
+        "Vice President Harris",
+        "Vice Pres Harris",
+        "VP Harris",
+        "Harris"
+      ]
+    },
+    {
       "Lauren Boebert": [
+        "Representative Lauren Boebert",
+        "Rep Lauren Boebert",
         "Lauren Boebert",
+        "Representative Boebert",
+        "Rep Boebert",
         "Boebert"
       ]
     },
     {
+      "Matt Gaetz": [
+        "Representative Matt Gaetz",
+        "Rep Matt Gaetz",
+        "Matt Gaetz",
+        "Representative Gaetz",
+        "Rep Gaetz",
+        "Gaetz"
+      ]
+    },
+    {
+      "Mike Johnson": [
+        "House Speaker Mike Johnson",
+        "Speaker Mike Johnson",
+        "Representative Mike Johnson",
+        "Rep Mike Johnson",
+        "Mike Johnson",
+        "House Speaker Johnson",
+        "Speaker Johnson",
+        "Representative Johnson",
+        "Rep Johnson",
+        "Johnson"
+      ]
+    },
+    {
       "Mitch McConnell": [
+        "Senator Mitch McConnell",
+        "Sen Mitch McConnell",
         "Mitch McConnell",
+        "Senator McConnell",
+        "Sen McConnell",
         "McConnell"
       ]
     },
     {
+      "Nancy Pelosi": [
+        "Representative Nancy Pelosi",
+        "Rep Nancy Pelosi",
+        "Nancy Pelosi",
+        "Representative Pelosi",
+        "Rep Pelosi",
+        "Pelosi"
+      ]
+    },
+    {
       "Nikki Haley": [
+        "Governor Nikki Haley",
+        "Gov Nikki Haley",
         "Nikki Haley",
+        "Governor Haley",
+        "Gov Haley",
         "Haley"
       ]
     },
@@ -54,9 +191,39 @@
       ]
     },
     {
+      "Ruth Bader Ginsburg": [
+        "Justice Ruth Bader Ginsburg",
+        "Ruth Bader Ginsburg",
+        "RBG",
+        "Ruth Ginsburg",
+        "Justice Ginsburg",
+        "Ginsburg"
+      ]
+    },
+    {
+      "Taylor Swift": [
+        "Taylor Swift",
+        "Swift"
+      ]
+    },
+    {
       "Ted Cruz": [
+        "Senator Ted Cruz",
+        "Sen Ted Cruz",
         "Ted Cruz",
+        "Senator Cruz",
+        "Sen Cruz",
         "Cruz"
+      ]
+    },
+    {
+      "Tim Scott": [
+        "Senator Tim Scott",
+        "Sen Tim Scott",
+        "Tim Scott",
+        "Senator Scott",
+        "Sen Scott",
+        "Scott"
       ]
     }
   ]

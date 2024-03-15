@@ -1,8 +1,9 @@
 import { Logger } from '@soralinks/logger';
 import { S3Client, GetObjectCommand, PutObjectCommand, } from "@aws-sdk/client-s3";
 import { NewsScraperSource, } from '@soralinks/news-scrapers';
+import OpenAI from "openai";
 import { News, } from '../../index.js';
-const { NEWS_HEADLINES_DATA_S3_BUCKET, NEWS_DEFAULT_NUM_TOP_HEADLINES, NEWS_DEFAULT_NUM_TOP_TOKENS, NEWS_SCRAPER_TYPE, NEWS_HEADLINES_FILENAME, NEWS_IGNORE_TOKENS_FILENAME, NEWS_MULTI_WORD_TOKENS_FILENAME, NEWS_SYNONYM_TOKENS_FILENAME } = process.env;
+const { NEWS_HEADLINES_DATA_S3_BUCKET, NEWS_DEFAULT_NUM_TOP_HEADLINES, NEWS_DEFAULT_NUM_TOP_TOKENS, NEWS_SCRAPER_TYPE, NEWS_HEADLINES_FILENAME, NEWS_IGNORE_TOKENS_FILENAME, NEWS_MULTI_WORD_TOKENS_FILENAME, NEWS_SYNONYM_TOKENS_FILENAME, NEWS_OPENAI_API_KEY, NEWS_OPENAI_CORPORATION, NEWS_OPENAI_MODEL } = process.env;
 function initResponse() {
     return {
         isBase64Encoded: false,
@@ -28,6 +29,97 @@ async function postHeadlinesToS3(json) {
         throw new Error(`PutObjectCommand returned status code: ${statusCode}`);
     }
     return response;
+}
+function updateMultiWordTokens(multiWordTokens, synonymTokens, names) {
+    if (!names || !names.length)
+        return multiWordTokens;
+    const updatedMultiWordTokens = [...multiWordTokens];
+    for (let x = 0; x < names.length; x++) {
+        const name = names[x];
+        // If name is already in the multiWordTokens array
+        if (multiWordTokens.find(token => token === name))
+            continue;
+        // If name is already in the synonymTokens array
+        if (synonymTokens.find((synonymToken) => {
+            const [key] = Object.keys(synonymToken);
+            const values = synonymToken[key];
+            if (values.find((token) => token === name))
+                return true;
+            return false;
+        }))
+            continue;
+        updatedMultiWordTokens.push(name);
+    }
+    return updatedMultiWordTokens;
+}
+function generateOpenAIMessages(titles) {
+    let content = `
+    Extract the names of people mentioned in the sentences below. When doing so, please follow these rules closely: 
+    - Include names that appear multiple times. 
+    - If you encounter a name that specifies the first and last name, then encounter just the last name, include the last name as well. 
+    - Do not exlude the name Trump. 
+    - Remember, only include names of people. 
+    - Return the results in an array named names within a JSON object. 
+    Here are the list of sentences: `;
+    titles.forEach(title => {
+        content = content += `${title}.  `;
+    });
+    return [
+        {
+            role: 'user',
+            content
+        }
+    ];
+}
+async function getNames(titles, logger) {
+    let names = [];
+    try {
+        const messages = generateOpenAIMessages(titles);
+        const openai = new OpenAI({
+            apiKey: NEWS_OPENAI_API_KEY,
+            organization: NEWS_OPENAI_CORPORATION,
+        });
+        const response = await openai.chat.completions.create({
+            messages,
+            // @ts-ignore
+            model: NEWS_OPENAI_MODEL,
+            temperature: 0.0, // get consistent results
+        });
+        const { choices } = response;
+        if (!choices || !choices.length)
+            throw new Error('choices field is undefined or an empty array');
+        const [choice] = choices;
+        const { message } = choice;
+        if (!message)
+            throw new Error('message field is undefined');
+        let { content } = message;
+        if (!content)
+            throw new Error('content field is undefined');
+        try {
+            content = JSON.parse(content);
+        }
+        catch (error) {
+            throw new Error('unable to JSON.parse content field');
+        }
+        // @ts-ignore
+        const { names: allNames } = content;
+        if (!allNames)
+            throw new Error('names field is undefined');
+        // Tokenize the names and remove duplicates
+        // Only include full names, eg. "Tim Monroe" -vs- "Monroe"
+        allNames.forEach((name) => {
+            if (name.includes(' ') && !names.find((n) => n === name)) {
+                // Convert the name to a token, removing commas, punctuation, etc.
+                const tokenizedName = name.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '');
+                names.push(tokenizedName);
+            }
+        });
+    }
+    catch (error) {
+        // Note: just logging the error and continuing as sometimes the OpenAI calls just fail
+        logger.error(error.message);
+    }
+    return names;
 }
 // Get the tokens from the S3 bucket
 async function getTokensFromS3(fileName) {
@@ -73,7 +165,9 @@ export const handler = async (event, context) => {
         const topTokensCount = parseInt(NEWS_DEFAULT_NUM_TOP_TOKENS, 10);
         logger.verbose(`topTokensCount: ${topTokensCount}`);
         // Get the tokens from S3
-        const { ignoreTokens, multiWordTokens, synonymTokens } = await getTokens();
+        const tokens = await getTokens();
+        const { ignoreTokens, synonymTokens } = tokens;
+        let { multiWordTokens } = tokens;
         logger.verbose(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
         logger.verbose(`multiWordTokens: ${JSON.stringify(multiWordTokens, null, 2)}`);
         logger.verbose(`synonymTokens: ${JSON.stringify(synonymTokens, null, 2)}`);
@@ -84,6 +178,12 @@ export const handler = async (event, context) => {
         // @ts-ignore
         const scraperResponses = await news.scrapeHeadlines(type, sources);
         logger.verbose(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
+        const titles = scraperResponses.map(scraperResponse => {
+            return scraperResponse.headlines.map(headline => headline.title);
+        }).flat();
+        // Get the names from the titles, then add them to the multiWordTokens array
+        const names = await getNames(titles, logger);
+        multiWordTokens = updateMultiWordTokens(multiWordTokens, synonymTokens, names);
         // Tokenize the titles
         const tokenizedTitles = news.tokenizeTitles({
             scraperResponses,

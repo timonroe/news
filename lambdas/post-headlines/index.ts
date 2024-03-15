@@ -14,6 +14,7 @@ import {
   NewsScraperSource,
   NewsScraperResponse,
 } from '@soralinks/news-scrapers';
+import OpenAI from "openai";
 import {
   NewsHeadline,
   RankedToken,
@@ -29,8 +30,22 @@ const {
   NEWS_HEADLINES_FILENAME,
   NEWS_IGNORE_TOKENS_FILENAME,
   NEWS_MULTI_WORD_TOKENS_FILENAME,
-  NEWS_SYNONYM_TOKENS_FILENAME
+  NEWS_SYNONYM_TOKENS_FILENAME,
+  NEWS_OPENAI_API_KEY,
+  NEWS_OPENAI_CORPORATION,
+  NEWS_OPENAI_MODEL
 } = process.env;
+
+type OpenAIMessage = {
+  role: 'user';
+  content: string;
+};
+
+type Tokens = {
+  ignoreTokens: string[];
+  multiWordTokens: string[];
+  synonymTokens: object[];
+};
 
 function initResponse(): LambdaResponse {
   return {
@@ -60,6 +75,96 @@ async function postHeadlinesToS3(json: any) {
   return response;
 }
 
+function updateMultiWordTokens(
+  multiWordTokens: string[],
+  synonymTokens: object[],
+  names: string[]
+): string[] {
+  if (!names || !names.length) return multiWordTokens;
+  const updatedMultiWordTokens: string[] = [...multiWordTokens];
+  for (let x = 0; x < names.length; x++) {
+    const name = names[x];
+    // If name is already in the multiWordTokens array
+    if (multiWordTokens.find(token => token === name)) continue;
+    // If name is already in the synonymTokens array
+    if (synonymTokens.find((synonymToken: any) => {
+      const [key] = Object.keys(synonymToken);
+      const values = synonymToken[key];
+      if (values.find((token: any) => token === name)) return true;
+      return false;
+    })) continue;
+    updatedMultiWordTokens.push(name);
+  }
+  return updatedMultiWordTokens;
+}
+
+function generateOpenAIMessages(titles: string[]): OpenAIMessage[] {
+  let content = `
+    Extract the names of people mentioned in the sentences below. When doing so, please follow these rules closely: 
+    - Include names that appear multiple times. 
+    - If you encounter a name that specifies the first and last name, then encounter just the last name, include the last name as well. 
+    - Do not exlude the name Trump. 
+    - Remember, only include names of people. 
+    - Return the results in an array named names within a JSON object. 
+    Here are the list of sentences: `;
+  titles.forEach(title => {
+    content = content += `${title}.  `;
+  });
+  return [
+    {
+      role: 'user',
+      content
+    }
+  ];
+}
+
+async function getNames(titles: string[], logger: Logger): Promise<string[]> {
+  let names: string[] = [];
+  try {
+    const messages: OpenAIMessage[] = generateOpenAIMessages(titles);
+    const openai = new OpenAI({
+      apiKey: NEWS_OPENAI_API_KEY,
+      organization: NEWS_OPENAI_CORPORATION,
+    });
+    const response = await openai.chat.completions.create({
+      messages,
+      // @ts-ignore
+      model: NEWS_OPENAI_MODEL,
+      temperature: 0.0, // get consistent results
+    });
+    const { choices } = response;
+    if (!choices || !choices.length) throw new Error('choices field is undefined or an empty array');
+    const [choice] = choices;
+    const { message } = choice;
+    if (!message) throw new Error('message field is undefined');
+    let { content } = message;
+    if (!content) throw new Error('content field is undefined');
+    try {
+      content = JSON.parse(content);
+    } catch (error: any) {
+      throw new Error('unable to JSON.parse content field');
+    }
+    // @ts-ignore
+    const { names: allNames } = content;
+    if (!allNames) throw new Error('names field is undefined');
+
+    // Tokenize the names and remove duplicates
+    // Only include full names, eg. "Tim Monroe" -vs- "Monroe"
+    allNames.forEach((name: string) => {
+      if (name.includes(' ') && !names.find((n: string) => n === name)) {
+        // Convert the name to a token, removing commas, punctuation, etc.
+        const tokenizedName = name.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '');
+        names.push(tokenizedName);
+      }
+    });
+
+  } catch (error: any) {
+    // Note: just logging the error and continuing as sometimes the OpenAI calls just fail
+    logger.error(error.message);
+  }
+  return names;
+}
+
 // Get the tokens from the S3 bucket
 async function getTokensFromS3(fileName: string | undefined): Promise<any> {
   if (!fileName) return {};
@@ -81,7 +186,7 @@ async function getTokensFromS3(fileName: string | undefined): Promise<any> {
   return JSON.parse(str);
 }
 
-async function getTokens(): Promise<any> {
+async function getTokens(): Promise<Tokens> {
   return {
     ignoreTokens: (await getTokensFromS3(NEWS_IGNORE_TOKENS_FILENAME)).ignoreTokens,
     multiWordTokens: (await getTokensFromS3(NEWS_MULTI_WORD_TOKENS_FILENAME)).multiWordTokens,
@@ -106,11 +211,9 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
     logger.verbose(`topTokensCount: ${topTokensCount}`);
 
     // Get the tokens from S3
-    const {
-      ignoreTokens,
-      multiWordTokens,
-      synonymTokens
-    } = await getTokens();
+    const tokens: Tokens = await getTokens();
+    const { ignoreTokens, synonymTokens} = tokens;
+    let { multiWordTokens } = tokens;
     logger.verbose(`ignoreTokens: ${JSON.stringify(ignoreTokens, null, 2)}`);
     logger.verbose(`multiWordTokens: ${JSON.stringify(multiWordTokens, null, 2)}`);
     logger.verbose(`synonymTokens: ${JSON.stringify(synonymTokens, null, 2)}`);
@@ -122,6 +225,14 @@ export const handler: LambdaHandler = async (event: LambdaEvent, context: Lambda
     // @ts-ignore
     const scraperResponses: NewsScraperResponse[] = await news.scrapeHeadlines(type, sources);
     logger.verbose(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
+
+    const titles = scraperResponses.map(scraperResponse => {
+      return scraperResponse.headlines.map(headline => headline.title);
+    }).flat();
+
+    // Get the names from the titles, then add them to the multiWordTokens array
+    const names = await getNames(titles, logger);
+    multiWordTokens = updateMultiWordTokens(multiWordTokens, synonymTokens, names);
    
     // Tokenize the titles
     const tokenizedTitles: string[][][] = news.tokenizeTitles({

@@ -75,6 +75,7 @@ async function postHeadlinesToS3(json: any) {
   return response;
 }
 
+// Update the multiWordTokens array with an array of names
 function updateMultiWordTokens(
   multiWordTokens: string[],
   synonymTokens: object[],
@@ -118,8 +119,10 @@ function generateOpenAIMessages(titles: string[]): OpenAIMessage[] {
   ];
 }
 
+// Extract names of people from the titles
+// Note: currently using AI for this
 async function getNames(titles: string[], logger: Logger): Promise<string[]> {
-  let names: string[] = [];
+  const names: string[] = [];
   try {
     const messages: OpenAIMessage[] = generateOpenAIMessages(titles);
     const openai = new OpenAI({

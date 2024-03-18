@@ -30,6 +30,7 @@ async function postHeadlinesToS3(json) {
     }
     return response;
 }
+// Update the multiWordTokens array with an array of names
 function updateMultiWordTokens(multiWordTokens, synonymTokens, names) {
     if (!names || !names.length)
         return multiWordTokens;
@@ -71,8 +72,10 @@ function generateOpenAIMessages(titles) {
         }
     ];
 }
+// Extract names of people from the titles
+// Note: currently using AI for this
 async function getNames(titles, logger) {
-    let names = [];
+    const names = [];
     try {
         const messages = generateOpenAIMessages(titles);
         const openai = new OpenAI({

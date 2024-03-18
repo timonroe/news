@@ -58,7 +58,6 @@ function generateOpenAIMessages(titles) {
     Extract the names of people mentioned in the sentences below. When doing so, please follow these rules closely: 
     - Include names that appear multiple times. 
     - If you encounter a name that specifies the first and last name, then encounter just the last name, include the last name as well. 
-    - Do not exlude the name Trump. 
     - Remember, only include names of people. 
     - Return the results in an array named names within a JSON object. 
     Here are the list of sentences: `;

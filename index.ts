@@ -135,26 +135,11 @@ export class News {
         const { title } = headline;
         const titleTokens: string[] = [];
 
-        // Tokenize the tile
+        // Tokenize the title
         let tokenizedTitle = title.split(' ').map(word => {
           // Convert the word to a token, removing commas, punctuation, etc.
           return word.trim().replace(/’s|'s|[`'‘’:;",.?]/g, '');
         }).filter(token => token !== '').join(' ');
-
-        // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
-        // Note: this step must come before the synonymTokens step below
-        if (multiWordTokens) {
-          multiWordTokens.forEach(multiWordToken => {
-            const idx = tokenizedTitle.indexOf(multiWordToken); // case-sensitive search
-            // If we find the token in the tokenizedTitle
-            if (idx !== -1) {
-              titleTokens.push(multiWordToken);
-              // Remove *all* instances of the token from the tokenizedTitle
-              const regex = new RegExp(multiWordToken, 'g');
-              tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
-            }
-          });
-        }
 
         // Extract the synonym tokens from the tokenizedTitle and add them to the titleTokens
         if (synonymTokens) {
@@ -162,7 +147,7 @@ export class News {
             // Loop through all of the synonym tokens
             for (const [synonymToken, valueTokens] of Object.entries(entry)) {
               let addedSynonymToken = false;
-              // Loop through all of the values tokens for this synonym token
+              // Loop through all of the values for this synonym token
               valueTokens.forEach((valueToken: string) => {
                 const idx = tokenizedTitle.indexOf(valueToken); // case-sensitive search
                 // If we find the token in the tokenizedTitle
@@ -177,6 +162,20 @@ export class News {
                   tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
                 }
               });
+            }
+          });
+        }
+
+        // Extract the multi-word tokens from the tokenizedTitle and add them to the titleTokens
+        if (multiWordTokens) {
+          multiWordTokens.forEach(multiWordToken => {
+            const idx = tokenizedTitle.indexOf(multiWordToken); // case-sensitive search
+            // If we find the token in the tokenizedTitle
+            if (idx !== -1) {
+              titleTokens.push(multiWordToken);
+              // Remove *all* instances of the token from the tokenizedTitle
+              const regex = new RegExp(multiWordToken, 'g');
+              tokenizedTitle = tokenizedTitle.replace(regex, ''); // case-sensitive string replace
             }
           });
         }

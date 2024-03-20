@@ -1,5 +1,5 @@
 import { Logger } from '@soralinks/logger';
-import { NewsScraperFactor, } from '@soralinks/news-scrapers';
+import { NewsScraperFactory, } from '@soralinks/news-scrapers';
 const { LOGGING_NEWS, } = process.env;
 const MIN_TOKEN_COUNT = 2;
 export class News {
@@ -158,7 +158,7 @@ export class News {
     async scrapeHeadlines(type, sources) {
         let responses = [];
         try {
-            const factory = new NewsScraperFactor();
+            const factory = new NewsScraperFactory();
             const scrapers = await factory.createScrapers(sources);
             const results = await Promise.allSettled(scrapers.map(async (scraper) => {
                 return scraper.scrape(type);

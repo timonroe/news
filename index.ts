@@ -4,7 +4,7 @@ import {
   NewsScraperSource,
   NewsScraperResponse,
   NewsScraper,
-  NewsScraperFactor,
+  NewsScraperFactory,
 } from '@soralinks/news-scrapers';
 
 const {
@@ -206,7 +206,7 @@ export class News {
   ): Promise<NewsScraperResponse[]> {
     let responses: NewsScraperResponse[] = [];
     try {
-      const factory = new NewsScraperFactor();
+      const factory = new NewsScraperFactory();
       const scrapers = await factory.createScrapers(sources);
       const results = await Promise.allSettled(
         scrapers.map(async (scraper: NewsScraper) => {

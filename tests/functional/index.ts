@@ -33,7 +33,7 @@ const {
   const type = NewsScraperType.POLITICS;
   const sources = [...Object.values(NewsScraperSource).map(source => source)];
   const scraperResponses: NewsScraperResponse[] = await news.scrapeHeadlines(type, sources);
-  console.log(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
+  // console.log(`scraperResponses: ${JSON.stringify(scraperResponses, null, 2)}`);
 
   // Tokenize the titles
   const tokenizedTitles: string[][][] = news.tokenizeTitles({
@@ -42,11 +42,11 @@ const {
     multiWordTokens,
     synonymTokens,
   });
-  console.log(`tokenizedTitles: ${JSON.stringify(tokenizedTitles, null, 2)}`);
+  // console.log(`tokenizedTitles: ${JSON.stringify(tokenizedTitles, null, 2)}`);
 
   // Rank the tokens
   const rankedTokens: RankedToken[] = news.rankTokens(tokenizedTitles);
-  console.log(`rankedTokens: ${JSON.stringify(rankedTokens, null, 2)}`);
+  // console.log(`rankedTokens: ${JSON.stringify(rankedTokens, null, 2)}`);
 
   // Get the top ranked tokens
   const topRankedTokens: RankedToken[] = []
@@ -57,7 +57,7 @@ const {
 
   // Score the titles based on the ranked tokens
   const scoredTitles: any[] = news.scoreTitles(scraperResponses, rankedTokens);
-  console.log(`scoredTitles: ${JSON.stringify(scoredTitles, null, 2)}`);
+  // console.log(`scoredTitles: ${JSON.stringify(scoredTitles, null, 2)}`);
 
   // Get the top ranked headlines
   const rankedHeadlines: NewsHeadline[] = scoredTitles.map(({ source, title, url }) => { return { source, title, url } });

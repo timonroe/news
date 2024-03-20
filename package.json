@@ -1,6 +1,6 @@
 {
   "name": "@soralinks/news",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "News utility",
   "author": "Tim Monroe <timonroe12@gmail.com>",
   "types": "./index.d.ts",
@@ -17,14 +17,14 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.124",
-    "@types/node": "^20.9.0",
-    "dotenv": "^16.3.1",
-    "typescript": "^5.2.2"
+    "@types/node": "^20.11.30",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.4.2"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.477.0",
+    "@aws-sdk/client-s3": "^3.537.0",
     "@soralinks/logger": "^0.0.9",
-    "@soralinks/news-scrapers": "^0.0.30",
-    "openai": "^4.29.0"
+    "@soralinks/news-scrapers": "^0.0.31",
+    "openai": "^4.29.2"
   }
 }

@@ -24,7 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.537.0",
     "@soralinks/logger": "^0.0.9",
-    "@soralinks/news-scrapers": "^0.0.35",
+    "@soralinks/news-scrapers": "^0.0.36",
     "openai": "^4.29.2"
   }
 }
